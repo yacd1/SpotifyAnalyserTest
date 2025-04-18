@@ -29,7 +29,8 @@ public class UserServiceImplementation implements UserService
                 }
             }
 
-            existingUser.setMinigameBestTimeInSeconds(user.getMinigameBestTimeInSeconds());
+            existingUser.setSongsMinigameBestTimeInSeconds(null);
+            existingUser.setArtistsMinigameBestTimeInSeconds(null);
             return userRepository.save(existingUser);
         } else {
             return userRepository.save(user);
@@ -50,25 +51,12 @@ public class UserServiceImplementation implements UserService
     @Override
     public List<User> getTopMinigamePlayers() throws Exception
     {
-        List<User> users = userRepository.findTop5ByOrderByMinigameBestTimeInSecondsAsc();
+        List<User> users = userRepository.findTop5ByOrderByArtistsMinigameBestTimeInSecondsAsc();
         if (users != null)
         {
             return users;
         }
         throw new Exception("No top minigame players found");
-    }
-
-    @Override
-    public User getUserMinigameTime(String username) throws Exception {
-        List<User> users = userRepository.findAllBySpotifyUsername(username);
-        if (users.isEmpty()) {
-            throw new Exception("User not found");
-        }
-
-        if (users.size() > 1) {
-            System.out.println("Warning: Found " + users.size() + " users with username: " + username + ". Using the first one.");
-        }
-        return users.get(0);
     }
 
     @Override
@@ -81,5 +69,26 @@ public class UserServiceImplementation implements UserService
             userRepository.delete(user);
         }
         return true;
+    }
+
+    @Override
+    public boolean updateMinigameTime(String username, long newTime, String typeOfGame) throws Exception {
+        List<User> users = userRepository.findAllBySpotifyUsername(username);
+        if (users.isEmpty()) {
+            return false;
+        }
+        User user = users.get(0);
+        if (typeOfGame.equals("artists")) {
+            if (user.getArtistsMinigameBestTimeInSeconds() == null || newTime < user.getArtistsMinigameBestTimeInSeconds()) {
+                user.setArtistsMinigameBestTimeInSeconds(newTime);
+                userRepository.save(user);
+            }
+        } else if (typeOfGame.equals("songs")) {
+            if (user.getSongsMinigameBestTimeInSeconds() == null || newTime < user.getSongsMinigameBestTimeInSeconds()) {
+                user.setSongsMinigameBestTimeInSeconds(newTime);
+                userRepository.save(user);
+            }
+        }
+        return false;
     }
 }

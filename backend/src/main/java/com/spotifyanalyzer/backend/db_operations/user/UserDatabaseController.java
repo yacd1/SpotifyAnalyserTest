@@ -30,7 +30,7 @@ public class UserDatabaseController
     }
 
     //Get all the registered users.
-    @GetMapping("/getAllusers")
+    @GetMapping("/getAllUsers")
     public ResponseEntity<List<User>>getRegisteredUser() throws Exception
     {
         List<User>users=userService.getRegisteredUsers();
@@ -52,51 +52,45 @@ public class UserDatabaseController
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    //get a user minigame time
-    @GetMapping("/userMinigameTime")
-    public ResponseEntity<User> getUserMinigameTime(@RequestParam String username) throws Exception
-    {
-        User user = userService.getUserMinigameTime(username);
-        if (user != null)
-        {
-            return new ResponseEntity<>(user, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    //update the user minigame time if it is less than the previous time
-    @PutMapping("/updateMinigameTime")
-    public ResponseEntity<?> updateMinigameTime(@RequestParam String username, @RequestParam long newTime) {
+    //update user minigame time
+    @PutMapping("/updateArtistMinigameTime")
+    public ResponseEntity<?> updateArtistMinigameTime(@RequestParam String username, @RequestParam long newTime) {
         try {
-            User user;
-            boolean isNewUser = false;
+            boolean wasUpdated = userService.updateMinigameTime(username, newTime, "artists");
 
-            try {
-                user = userService.getUserMinigameTime(username);
-            } catch (Exception e) {
-                user = new User(username, newTime);
-                isNewUser = true;
-            }
-
-            if (isNewUser || newTime < user.getMinigameBestTimeInSeconds()) {
-                user.setMinigameBestTimeInSeconds(newTime);
-                userService.registerUser(user);
-
-                Map<String, Object> response = new HashMap<>();
-                response.put("user", user);
-                response.put("isNewUser", isNewUser);
-
-                return new ResponseEntity<>(response, HttpStatus.OK);
-            } else {
-                Map<String, Object> response = new HashMap<>();
-                response.put("message", "New time is not better than previous best time");
-                response.put("currentBestTime", user.getMinigameBestTimeInSeconds());
-                return new ResponseEntity<>(response, HttpStatus.OK);
-            }
+            return getResponseMessage(wasUpdated);
         } catch (Exception e) {
             return new ResponseEntity<>(
-                    Map.of("error", "Failed to update minigame time: " + e.getMessage()),
+                    Map.of("error", "Error: " + e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PutMapping("/updateSongMinigameTime")
+    public ResponseEntity<?> updateSongMinigameTime(@RequestParam String username, @RequestParam long newTime) {
+        try {
+            boolean wasUpdated = userService.updateMinigameTime(username, newTime, "songs");
+
+            return getResponseMessage(wasUpdated);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    Map.of("error", "Error: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    private static ResponseEntity<Map<String, String>> getResponseMessage(boolean wasUpdated) {
+        if (wasUpdated) {
+            return new ResponseEntity<>(
+                    Map.of("message", "Minigame time updated successfully"),
+                    HttpStatus.OK
+            );
+        } else {
+            return new ResponseEntity<>(
+                    Map.of("message", "Couldn't find user or minigame time not updated"),
+                    HttpStatus.OK
             );
         }
     }

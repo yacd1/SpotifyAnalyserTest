@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { Theme } from "../services/Theme";
@@ -18,6 +19,14 @@ const Home = () => {
     const [recommendations, setRecommendations] = useState([]);
     const [topGenre, setTopGenre] = useState(null);
     const [topSongs, setTopSongs] = useState(null);
+    const [users, setUsers] = useState(null);
+    const [showingArtists, setShowingArtists] = useState(true);
+    const [artistGameHighScore, setArtistGameHighScore] = useState(null);
+    const [trackGameHighScore, setTrackGameHighScore] = useState(null);
+
+    const toggleHighScore = () => {
+        setShowingArtists(!showingArtists);
+      };
 
 
     const fetchRecentlyPlayed = async () => {
@@ -46,6 +55,40 @@ const Home = () => {
             console.error("Error loading top genre:", error);
         }
     };
+
+    const fetchArtistGameHighScore = async () => {
+        try {
+            const status = await apiService.checkSpotifyStatus();
+            if (status.authenticated && status.profile) {
+                const artistScoreResponse = await apiService.getUserArtistMinigameTime(status.profile.display_name);
+                console.log("Artist score:", artistScoreResponse);
+                if (artistScoreResponse.artistMinigameTime !== false) {
+                    setArtistGameHighScore(artistScoreResponse.artistMinigameTime);
+                } else {
+                    console.log("No artist score found");
+                    setArtistGameHighScore("--");
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching artist game high score:", error);
+        }
+    }
+
+    const fetchTrackGameHighScore = async () => {
+        try {
+            const status = await apiService.checkSpotifyStatus();
+            if (status.authenticated && status.profile) {
+                const trackScoreResponse = await apiService.getUserSongMinigameTime(status.profile.display_name);
+                if (trackScoreResponse.songMinigameTime !== false) {
+                    setTrackGameHighScore(trackScoreResponse.songMinigameTime);
+                } else {
+                    setTrackGameHighScore("--");
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching track game high score:", error);
+        }
+    }
 
     const fetchTopSongs = async () => {
         try {
@@ -82,9 +125,17 @@ const Home = () => {
         }
     };
 
+    const addUserToDatabase = async () => {
+            const fetchedUsers = await apiService.getAllUsers();
+            setUsers(fetchedUsers);
+            console.log("Users:", fetchedUsers);
+            const status = await apiService.checkSpotifyStatus();
+            console.log("Status:", status);
 
 
+            await apiService.registerUser(status.profile.display_name);
 
+    }
 
     // check authentication (mounting on to Home component)
     useEffect(() => {
@@ -98,6 +149,9 @@ const Home = () => {
         fetchReccomendations();
         fetchTopGenre();
         fetchTopSongs();
+        addUserToDatabase();
+        fetchArtistGameHighScore();
+        fetchTrackGameHighScore();
     }, [accessToken, navigate]);
 
     // whenever the time period changes we need to refresh - this does that with timeRange as a param
@@ -107,6 +161,9 @@ const Home = () => {
             fetchRecentlyPlayed();
             fetchReccomendations();
             fetchTopSongs();
+            fetchArtistGameHighScore();
+            fetchTrackGameHighScore();
+            addUserToDatabase();
         }
     }, [timeRange]);
 
@@ -223,11 +280,28 @@ const Home = () => {
                             )}
                         </div>
                         <div className="my-stats-minigame-time">
-                            <h3 style={{ marginTop: '20px' }}>Your Minigame High Score</h3>
-                            <div className="minigame-card">
-                                <span className="high-score">97 Seconds</span>
+                              <h3>Your Minigame High Score</h3>
+
+                              <div className="minigame-container">
+                                <div className="minigame-card">
+                                  <span className="high-score">
+                                    {showingArtists ? `Artist Game: ${artistGameHighScore} seconds` : `Track Game: ${trackGameHighScore} seconds`}
+                                  </span>
+                                </div>
+
+                                <button
+                                  className="toggle-button"
+                                  onClick={toggleHighScore}
+                                  aria-label="Toggle between artist and track high scores"
+                                >
+                                  {showingArtists ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
+                                </button>
+                              </div>
+
+                              <div className="toggle-label">
+                                {showingArtists ? 'Click to see Tracks' : 'Click to see Artists'}
+                              </div>
                             </div>
-                        </div>
                         <div className="my-stats-songs">
                             <h3>Your Top Songs</h3>
                             {topSongs ? (

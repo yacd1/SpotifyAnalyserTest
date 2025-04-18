@@ -14,5 +14,6 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     // Custom query to find top minigame players
     List<User> findTop5ByOrderByArtistsMinigameBestTimeInSecondsAsc();
+
 }
 

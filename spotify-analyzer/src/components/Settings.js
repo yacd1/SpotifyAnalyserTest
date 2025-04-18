@@ -7,7 +7,8 @@ import '../styles/App.css';
 function Settings() {
     const { isDarkMode, toggleTheme } = useContext(Theme);
     const [userProfile, setUserProfile] = useState(null);
-    const [highScore, setHighScore] = useState(null);
+    const [artistGameHighScore, setArtistGameHighScore] = useState(null);
+    const [trackGameHighScore, setTrackGameHighScore] = useState(null);
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -19,11 +20,30 @@ function Settings() {
                     setUserProfile(status.profile);
 
                     try {
-                        const userScore = await apiService.getUserMinigameTime(status.profile.display_name);
-                        setHighScore(userScore.minigameBestTimeInSeconds);
+                        const artistScoreResponse = await apiService.getUserArtistMinigameTime(status.profile.display_name);
+                        console.log("Artist score:", artistScoreResponse);
+                        if (artistScoreResponse.artistMinigameTime !== false) {
+                            setArtistGameHighScore(artistScoreResponse.artistMinigameTime);
+                            setArtistGameHighScore(artistScoreResponse.artistMinigameTime);
+                        }
+                        else {
+                            console.log("No artist score found");
+                            setArtistGameHighScore(null);
+                        }
+
+                        const trackScoreResponse = await apiService.getUserSongMinigameTime(status.profile.display_name);
+                        if (trackScoreResponse.songMinigameTime !== false) {
+                            setTrackGameHighScore(trackScoreResponse.songMinigameTime);
+                            console.log("Track score:", trackScoreResponse);
+                        }
+                        else {
+                            console.log("No track score found");
+                            setTrackGameHighScore(null);
+                        }
                     } catch (error) {
-                        console.log("No high score found for user");
-                        setHighScore(null);
+                        console.log("No high scores found for user");
+                        setArtistGameHighScore(null);
+                        setTrackGameHighScore(null);
                     }
                 }
             } catch (error) {
@@ -34,32 +54,31 @@ function Settings() {
         fetchUserData();
     }, []);
 
-    const handleRemoveHighScore = async () => {
+    const handleRemoveHighScore = async (scoreType) => {
         if (!userProfile) {
-            setMessage('Please log in to manage your high score');
+            setMessage('Please log in to manage your high scores');
             return;
         }
 
         setLoading(true);
         try {
-            // First check if the user exists in the database
-            try {
-                // Try to get the user's high score first - this will throw an error if the user doesn't exist
-                await apiService.getUserMinigameTime(userProfile.display_name);
+            // Check if the user exists and has the relevant score
+            if (scoreType === 'artist') {
+                    await apiService.deleteArtistMinigameScore(userProfile.display_name);
+                    setMessage('Artist game high score deleted successfully!');
+                    setArtistGameHighScore(null);
 
-                // If we get here, the user exists, so we can delete their score
-                await apiService.deleteMinigameScore(userProfile.display_name);
-                setMessage('High score deleted successfully!');
-                setHighScore(null);
-            } catch (error) {
-                // User doesn't exist in the database yet (no high score recorded)
-                if (error.message && (error.message.includes("User not found") ||
-                    error.message.includes("404"))) {
-                    setMessage('No high score found to delete.');
-                } else {
-                    // Some other error occurred
-                    throw error;
-                }
+            } else if (scoreType === 'track') {
+
+                    await apiService.deleteSongMinigameScore(userProfile.display_name);
+                    setMessage('Track game high score deleted successfully!');
+                    setTrackGameHighScore(null);
+
+            } else if (scoreType === 'all') {
+                    await apiService.deleteBothMinigameScores(userProfile.display_name);
+                    setMessage('All high scores deleted successfully!');
+                    setArtistGameHighScore(null);
+                    setTrackGameHighScore(null);
             }
         } catch (error) {
             console.error("Error removing high score:", error);
@@ -97,19 +116,38 @@ function Settings() {
                     <div className="setting-item">
                         <div>
                             <p>Logged in as: {userProfile.display_name}</p>
-                            {highScore !== null ? (
-                                <p>Your best minigame time: {highScore} seconds</p>
-                            ) : (
-                                <p>No minigame scores recorded yet</p>
-                            )}
+                            <div className="minigame-scores">
+                                <div className="score-item">
+                                    <p>Artist Game Best Time: {artistGameHighScore !== null ? `${artistGameHighScore} seconds` : 'No score recorded'}</p>
+                                    <button
+                                        onClick={() => handleRemoveHighScore('artist')}
+                                        disabled={loading || artistGameHighScore === null}
+                                        className="reset-button"
+                                    >
+                                        {loading ? 'Processing...' : 'Reset Artist Score'}
+                                    </button>
+                                </div>
+
+                                <div className="score-item">
+                                    <p>Track Game Best Time: {trackGameHighScore !== null ? `${trackGameHighScore} seconds` : 'No score recorded'}</p>
+                                    <button
+                                        onClick={() => handleRemoveHighScore('track')}
+                                        disabled={loading || trackGameHighScore === null}
+                                        className="reset-button"
+                                    >
+                                        {loading ? 'Processing...' : 'Reset Track Score'}
+                                    </button>
+                                </div>
+
+                                <button
+                                    onClick={() => handleRemoveHighScore('all')}
+                                    disabled={loading || (artistGameHighScore === null && trackGameHighScore === null)}
+                                    className="reset-all-button"
+                                >
+                                    {loading ? 'Processing...' : 'Reset All Scores'}
+                                </button>
+                            </div>
                         </div>
-                        <button
-                            onClick={handleRemoveHighScore}
-                            disabled={loading || highScore === null}
-                            className="reset-button"
-                        >
-                            {loading ? 'Processing...' : 'Reset Minigame Score'}
-                        </button>
                     </div>
                 ) : (
                     <p>Login with Spotify to manage your minigame scores</p>

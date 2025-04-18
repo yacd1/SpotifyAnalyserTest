@@ -14,6 +14,8 @@ function Minigames() {
     const [suggestion, setSuggestion] = useState(null);
     const [suggestionClicked, setSuggestionClicked] = useState(false);
     const [userProfile, setUserProfile] = useState(null);
+    const [response, setResponse] = useState(null);
+    const [currentBestTime, setCurrentBestTime] = useState(null);
 
     const [startTime, setStartTime] = useState(null);
     const [elapsedTime, setElapsedTime] = useState(0);
@@ -80,28 +82,35 @@ function Minigames() {
             setGameComplete(true);
 
             localStorage.setItem('gameCompleted', 'true');
-            saveHighScore();
+            if (mode === "artists") {
+                saveHighScore("artists");
+            } else {
+                saveHighScore("tracks");
+            }
         }
     }, [artists, tracks, mode, timerActive]);
 
-    const saveHighScore = async () => {
-        if (!userProfile || !userProfile.display_name) {
-            setScoreMessage("Login to save your score!");
-            return;
-        }
-
+    const saveHighScore = async (gameType) => {
         try {
-            // Since our backend now handles both new users and existing users,
-            // we can directly call updateMinigameTime without checking first
-            const response = await apiService.updateMinigameTime(userProfile.display_name, elapsedTime);
+
+            if (gameType === "artists") {
+                const response = await apiService.updateArtistMinigameTime(userProfile.display_name, elapsedTime)
+            } else {
+                const response = await apiService.updateSongMinigameTime(userProfile.display_name, elapsedTime)
+            }
 
             // Handle the response
-            if (response.isNewUser) {
-                setScoreMessage(`First score recorded: ${elapsedTime}s`);
-            } else if (response.user) {
+            if (response.updated) {
                 setScoreMessage(`New high score: ${elapsedTime}s!`);
             } else {
-                setScoreMessage(`Your best score is still: ${response.currentBestTime}s`);
+
+                if (gameType === "artists") {
+                   const currentBestTime = await apiService.getArtistMinigameTime(userProfile.display_name);
+                }
+                if (gameType === "tracks") {
+                    const currentBestTime = await apiService.getSongMinigameTime(userProfile.display_name);
+                }
+                setScoreMessage(`Your best score is still: ${currentBestTime}s`);
             }
         } catch (error) {
             console.error("Error saving high score:", error);

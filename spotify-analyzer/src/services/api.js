@@ -93,27 +93,46 @@ export const apiService = {
     getArtistByName: async (artistName) =>
         fetchHelper(`${BACKEND_URL}/db/artists/getArtistByName?artistName=${encodeURIComponent(artistName)}`),
 
-    registerUser: async (user) =>
-        fetchHelper(`${BACKEND_URL}/db/users/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(user),
+    registerUser: async (username) =>
+        fetchHelper(`${BACKEND_URL}/db/users/register?username=${encodeURIComponent(username)}`, {
+            method: 'PUT',
         }),
 
-    getAllUsers: async () => fetchHelper(`${BACKEND_URL}/db/users/getAllusers`),
+    getAllUsers: async () => fetchHelper(`${BACKEND_URL}/db/users/getAllUsers`),
 
     getTopMinigamePlayers: async () => fetchHelper(`${BACKEND_URL}/db/users/topMinigamePlayers`),
 
     getUserMinigameTime: async (username) =>
         fetchHelper(`${BACKEND_URL}/db/users/userMinigameTime?username=${encodeURIComponent(username)}`),
 
-    updateMinigameTime: async (username, newTime) =>
-        fetchHelper(`${BACKEND_URL}/db/users/updateMinigameTime?username=${encodeURIComponent(username)}&newTime=${newTime}`, {
+    getUserSongMinigameTime: async (username) =>
+        fetchHelper(`${BACKEND_URL}/db/users/getUserSongMinigameTime?username=${encodeURIComponent(username)}`),
+
+    getUserArtistMinigameTime: async (username) =>
+        fetchHelper(`${BACKEND_URL}/db/users/getUserArtistMinigameTime?username=${encodeURIComponent(username)}`),
+
+    updateArtistMinigameTime: async (username, newTime) =>
+        fetchHelper(`${BACKEND_URL}/db/users/updateArtistMinigameTime?username=${encodeURIComponent(username)}&newTime=${newTime}`, {
             method: 'PUT',
         }),
 
-    deleteMinigameScore: async (username) =>
-        fetchHelper(`${BACKEND_URL}/db/users/deleteMinigameScore?username=${encodeURIComponent(username)}`, {
+    updateSongMinigameTime: async (username, newTime) =>
+        fetchHelper(`${BACKEND_URL}/db/users/updateSongMinigameTime?username=${encodeURIComponent(username)}&newTime=${newTime}`, {
+            method: 'PUT',
+        }),
+
+    deleteBothMinigameScores: async (username) =>
+        fetchHelper(`${BACKEND_URL}/db/users/deleteBothMinigameScores?username=${encodeURIComponent(username)}`, {
+            method: 'DELETE',
+        }),
+
+    deleteArtistMinigameScore: async (username) =>
+        fetchHelper(`${BACKEND_URL}/db/users/deleteArtistMinigameScore?username=${encodeURIComponent(username)}`, {
+            method: 'DELETE',
+        }),
+
+    deleteSongMinigameScore: async (username) =>
+        fetchHelper(`${BACKEND_URL}/db/users/deleteSongMinigameScore?username=${encodeURIComponent(username)}`, {
             method: 'DELETE',
         }),
 };

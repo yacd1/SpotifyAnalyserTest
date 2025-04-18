@@ -4,10 +4,14 @@ import java.util.List;
 
 public interface UserService
 {
-    public User registerUser(User user) throws Exception;
+    public void registerUser(String username) throws Exception;
     public List<User> getRegisteredUsers() throws Exception;
     public List<User> getTopMinigamePlayers() throws Exception;
     public boolean updateMinigameTime(String username, long newTime, String typeOfGame) throws Exception;
-    public boolean deleteMinigameScore(String username) throws Exception;
+    public boolean deleteBothMinigameScores(String username) throws Exception;
+    public Long getUserArtistMinigameTime(String username) throws Exception;
+    public Long getUserSongMinigameTime(String username) throws Exception;
+    public boolean deleteArtistMinigameScore(String username) throws Exception;
+    public boolean deleteSongMinigameScore(String username) throws Exception;
 }
 

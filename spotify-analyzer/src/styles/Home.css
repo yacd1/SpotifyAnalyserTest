@@ -345,6 +345,7 @@
     font-size: 1.1rem;
     margin-top: 10px;
     width: 200px;
+    transition: transform 0.3s ease;
 }
 
 .genre-name,
@@ -357,7 +358,41 @@
     flex-direction: column;
     gap: 20px;
 }
+.minigame-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
 
+.toggle-button {
+    background-color: #1a4727;
+    color: var(--button-text);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: absolute;
+    right: -18px;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.toggle-button:hover {
+    background-color: #235230;
+    transform: scale(1.1);
+}
+
+.toggle-label {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: var(--text-color);
+    opacity: 0.8;
+}
 
 
 

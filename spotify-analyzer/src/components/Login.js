@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
 import '../styles/Home.css';
@@ -8,76 +8,70 @@ const Login = () => {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
+    const isProcessingCodeRef = useRef(false);
+    const hasRedirectedRef = useRef(false); // 💡 new: prevent flicker by locking redirects
 
     useEffect(() => {
-        // flag to track if code has been processed - prevents double authentication basically
-        let isProcessingCode = false;
-
         const checkAuthCode = async () => {
-            console.log("Login component mounted, pathname:", location.pathname);
+            console.log("Login mounted at:", location.pathname);
 
-            // check if there's already a session
+            if (hasRedirectedRef.current) return;
+
             try {
                 const authStatus = await apiService.checkSpotifyStatus();
                 if (authStatus.authenticated) {
-                    //console.log("authenticated, redirecting to home");
+                    hasRedirectedRef.current = true;
                     navigate('/home');
                     return;
                 }
             } catch (err) {
-                //console.log("unauthenticated");
+                // Continue to next step
             }
 
             if (location.pathname === '/callback') {
                 const params = new URLSearchParams(window.location.search);
                 const code = params.get('code');
 
-                // clean the url to prevent double authentication processing
+                // Clean up URL
                 window.history.replaceState({}, document.title, '/login');
 
-                if (code && !isProcessingCode) {
-                    isProcessingCode = true;
-                    //console.log("found authorisation code, exchanging for token...");
+                if (code && !isProcessingCodeRef.current) {
+                    isProcessingCodeRef.current = true;
+                    setLoading(true);
 
                     try {
-                        setLoading(true);
-
-                        // exchange code for token
                         const data = await apiService.exchangeCodeForToken(code);
 
                         if (data && data.access_token) {
-                            //console.log("token exchange successful");
-
-                            // store token in sessionStorage
                             sessionStorage.setItem('spotify_access_token', data.access_token);
 
+                            // Wait to allow backend to process
                             setTimeout(async () => {
                                 try {
-                                    // verify backend session is authenticated
                                     const status = await apiService.checkSpotifyStatus();
 
                                     if (status.authenticated) {
-                                        //console.log("authenticated, redirecting to home");
+                                        hasRedirectedRef.current = true;
                                         navigate('/home');
                                     } else {
-                                        // even if session check fails, try continuing with the token we have
-                                        navigate('/home');
+                                        setError("Authentication failed. Please try again.");
                                     }
                                 } catch (statusErr) {
-                                    navigate('/home');
+                                    setError("Authentication failed. Please try again.");
+                                } finally {
+                                    setLoading(false);
                                 }
-                            }, 500);
+                            }, 700); // wait slightly longer
                         } else {
-                            throw new Error("no access token received");
+                            throw new Error("No access token received");
                         }
                     } catch (err) {
-                        //console.error("authentication error:", err);
-                        setError("Failed to authenticate with Spotify. Please try again");
+                        console.error("Authentication error:", err);
+                        setError("Failed to authenticate with Spotify. Please try again.");
                         setLoading(false);
-                        isProcessingCode = false;
+                        isProcessingCodeRef.current = false;
                     }
-                } else if (!code) {
-                    //console.log("no auth code found in URL");
+                } else {
                     setLoading(false);
                 }
             } else {
@@ -86,11 +80,6 @@ const Login = () => {
         };
 
         checkAuthCode();
-
-        // handle the component unmounting
-        return () => {
-            isProcessingCode = false;
-        };
     }, [navigate, location.pathname]);
 
     const handleLogin = async () => {
@@ -100,21 +89,21 @@ const Login = () => {
 
             const data = await apiService.getSpotifyAuthUrl();
 
-            // redirect to Spotify authorisation page
             window.location.href = data.authUrl;
         } catch (err) {
-            //console.error("login error:", err);
-            setError("Failed to connect to Spotify. Please try again");
+            setError("Failed to connect to Spotify. Please try again.");
             setLoading(false);
         }
     };
 
     if (loading) {
-        return <div className="loading-container">
-            {location.pathname === '/callback' ?
-                "Processing Spotify authorisation..." :
-                "Loading..."}
-        </div>;
+        return (
+            <div className="loading-container">
+                {location.pathname === '/callback'
+                    ? "Processing Spotify authorisation..."
+                    : "Loading..."}
+            </div>
+        );
     }
 
     return (

@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -18,19 +19,18 @@ public class UserDatabaseController
 
 
     //Registers the users
-    @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody User user) throws Exception
+    @PutMapping("/register")
+    public ResponseEntity<?> register(@RequestParam String username) throws Exception
     {
-        if(user!=null)
+        if(username!=null)
         {
-            userService.registerUser(user);
-            return new ResponseEntity<>(user, HttpStatus.CREATED);
+            userService.registerUser(username);
         }
-        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.ok(Collections.singletonMap("message", "User registered"));
     }
 
     //Get all the registered users.
-    @GetMapping("/getAllusers")
+    @GetMapping("/getAllUsers")
     public ResponseEntity<List<User>>getRegisteredUser() throws Exception
     {
         List<User>users=userService.getRegisteredUsers();
@@ -52,59 +52,97 @@ public class UserDatabaseController
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    //get a user minigame time
-    @GetMapping("/userMinigameTime")
-    public ResponseEntity<User> getUserMinigameTime(@RequestParam String username) throws Exception
-    {
-        User user = userService.getUserMinigameTime(username);
-        if (user != null)
-        {
-            return new ResponseEntity<>(user, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    //update the user minigame time if it is less than the previous time
-    @PutMapping("/updateMinigameTime")
-    public ResponseEntity<?> updateMinigameTime(@RequestParam String username, @RequestParam long newTime) {
+    @GetMapping("/getUserArtistMinigameTime")
+    public ResponseEntity<?> getUserArtistMinigameTime(@RequestParam String username) {
         try {
-            User user;
-            boolean isNewUser = false;
-
-            try {
-                user = userService.getUserMinigameTime(username);
-            } catch (Exception e) {
-                user = new User(username, newTime);
-                isNewUser = true;
+            Long time = userService.getUserArtistMinigameTime(username);
+            if (time == null) {
+                return new ResponseEntity<>(
+                        Map.of("artistMinigameTime", false),
+                        HttpStatus.OK
+                );
             }
+                return new ResponseEntity<>(
+                        Map.of("artistMinigameTime", time),
+                        HttpStatus.OK
+                );
 
-            if (isNewUser || newTime < user.getMinigameBestTimeInSeconds()) {
-                user.setMinigameBestTimeInSeconds(newTime);
-                userService.registerUser(user);
-
-                Map<String, Object> response = new HashMap<>();
-                response.put("user", user);
-                response.put("isNewUser", isNewUser);
-
-                return new ResponseEntity<>(response, HttpStatus.OK);
-            } else {
-                Map<String, Object> response = new HashMap<>();
-                response.put("message", "New time is not better than previous best time");
-                response.put("currentBestTime", user.getMinigameBestTimeInSeconds());
-                return new ResponseEntity<>(response, HttpStatus.OK);
-            }
         } catch (Exception e) {
             return new ResponseEntity<>(
-                    Map.of("error", "Failed to update minigame time: " + e.getMessage()),
+                    Map.of("error", "Error: " + e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
 
-    @DeleteMapping("/deleteMinigameScore")
+    @GetMapping("/getUserSongMinigameTime")
+    public ResponseEntity<?> getUserSongMinigameTime(@RequestParam String username) {
+        try {
+            Long time = userService.getUserSongMinigameTime(username);
+            System.out.println("Time: " + time);
+                if (time == null) {
+                    return new ResponseEntity<>(
+                            Map.of("songMinigameTime", false),
+                            HttpStatus.OK
+                    );
+                }
+
+                return new ResponseEntity<>(
+                        Map.of("songMinigameTime", time),
+                        HttpStatus.OK
+                );
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    Map.of("error", "Error: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+
+    //update user minigame time
+    @PutMapping("/updateArtistMinigameTime")
+    public ResponseEntity<?> updateArtistMinigameTime(@RequestParam String username, @RequestParam long newTime) {
+        try {
+            boolean wasUpdated = userService.updateMinigameTime(username, newTime, "artists");
+
+            return getResponseMessage(wasUpdated);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    Map.of("error", "Error: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PutMapping("/updateSongMinigameTime")
+    public ResponseEntity<?> updateSongMinigameTime(@RequestParam String username, @RequestParam long newTime) {
+        try {
+            boolean wasUpdated = userService.updateMinigameTime(username, newTime, "songs");
+
+            return getResponseMessage(wasUpdated);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    Map.of("error", "Error: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    private static ResponseEntity<Map<String, Boolean>> getResponseMessage(boolean wasUpdated) {
+
+            return new ResponseEntity<>(
+                    Map.of("updated", wasUpdated),
+                    HttpStatus.OK
+
+            );
+    }
+
+    @DeleteMapping("/deleteBothMinigameScores")
     public ResponseEntity<?> deleteMinigameScore(@RequestParam String username) {
         try {
-            boolean deleted = userService.deleteMinigameScore(username);
+            boolean deleted = userService.deleteBothMinigameScores(username);
 
             if (deleted) {
                 return new ResponseEntity<>(
@@ -114,6 +152,54 @@ public class UserDatabaseController
             } else {
                 return new ResponseEntity<>(
                         Map.of("message", "No score found to delete"),
+                        HttpStatus.OK
+                );
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    Map.of("error", "Error: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @DeleteMapping("/deleteArtistMinigameScore")
+    public ResponseEntity<?> deleteArtistMinigameScore(@RequestParam String username) {
+        try {
+            boolean deleted = userService.deleteArtistMinigameScore(username);
+
+            if (deleted) {
+                return new ResponseEntity<>(
+                        Map.of("message", "Artist minigame score deleted successfully"),
+                        HttpStatus.OK
+                );
+            } else {
+                return new ResponseEntity<>(
+                        Map.of("message", "No artist score found to delete"),
+                        HttpStatus.OK
+                );
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    Map.of("error", "Error: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @DeleteMapping("/deleteSongMinigameScore")
+    public ResponseEntity<?> deleteSongMinigameScore(@RequestParam String username) {
+        try {
+            boolean deleted = userService.deleteSongMinigameScore(username);
+
+            if (deleted) {
+                return new ResponseEntity<>(
+                        Map.of("message", "Song minigame score deleted successfully"),
+                        HttpStatus.OK
+                );
+            } else {
+                return new ResponseEntity<>(
+                        Map.of("message", "No song score found to delete"),
                         HttpStatus.OK
                 );
             }

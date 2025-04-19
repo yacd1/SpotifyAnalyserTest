@@ -87,7 +87,7 @@ function Artists() {
                     const artist = {
                         artistName: artistInfo.name,
                         summary: summary["artist_summary"],
-                        update_date: new Date().toISOString() // Add an update date if required
+                        update_date: new Date().toISOString()
                     };
                     // Add the artist to the database
                     await apiService.addArtist(artist);

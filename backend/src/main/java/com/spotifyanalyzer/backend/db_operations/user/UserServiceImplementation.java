@@ -12,28 +12,18 @@ public class UserServiceImplementation implements UserService
     private UserRepository userRepository;
 
     @Override
-    public User registerUser(User user) throws Exception {
-        if(user == null) {
-            throw new Exception("User is null");
+    public void registerUser(String username) throws Exception {
+        // Check if the user already exists
+        User existingUser = userRepository.findBySpotifyUsername(username);
+        if (existingUser != null) {
+            // User already exists, no need to register again
+            return;
         }
-        List<User> existingUsers = userRepository.findAllBySpotifyUsername(user.getSpotifyUsername());
-
-        if (!existingUsers.isEmpty()) {
-            User existingUser = existingUsers.get(0);
-            if (existingUsers.size() > 1) {
-                System.out.println("Found " + existingUsers.size() + " duplicate users with username: " +
-                        user.getSpotifyUsername() + ". Using first one and removing others.");
-
-                for (int i = 1; i < existingUsers.size(); i++) {
-                    userRepository.delete(existingUsers.get(i));
-                }
-            }
-
-            existingUser.setMinigameBestTimeInSeconds(user.getMinigameBestTimeInSeconds());
-            return userRepository.save(existingUser);
-        } else {
-            return userRepository.save(user);
-        }
+        User user = new User();
+        user.setSpotifyUsername(username);
+        user.setArtistsMinigameBestTimeInSeconds(null);
+        user.setSongsMinigameBestTimeInSeconds(null);
+        userRepository.save(user);
     }
 
     @Override
@@ -50,7 +40,7 @@ public class UserServiceImplementation implements UserService
     @Override
     public List<User> getTopMinigamePlayers() throws Exception
     {
-        List<User> users = userRepository.findTop5ByOrderByMinigameBestTimeInSecondsAsc();
+        List<User> users = userRepository.findTop5ByOrderByArtistsMinigameBestTimeInSecondsAsc();
         if (users != null)
         {
             return users;
@@ -59,27 +49,87 @@ public class UserServiceImplementation implements UserService
     }
 
     @Override
-    public User getUserMinigameTime(String username) throws Exception {
-        List<User> users = userRepository.findAllBySpotifyUsername(username);
-        if (users.isEmpty()) {
-            throw new Exception("User not found");
-        }
-
-        if (users.size() > 1) {
-            System.out.println("Warning: Found " + users.size() + " users with username: " + username + ". Using the first one.");
-        }
-        return users.get(0);
-    }
-
-    @Override
-    public boolean deleteMinigameScore(String username) throws Exception {
+    public boolean deleteBothMinigameScores(String username) throws Exception {
         List<User> users = userRepository.findAllBySpotifyUsername(username);
         if (users.isEmpty()) {
             return false;
         }
-        for (User user : users) {
-            userRepository.delete(user);
+        User user = users.get(0);
+        user.setArtistsMinigameBestTimeInSeconds(null);
+        user.setSongsMinigameBestTimeInSeconds(null);
+        userRepository.save(user);
+        return true;
+    }
+
+    @Override
+    public boolean updateMinigameTime(String username, long newTime, String typeOfGame) throws Exception {
+        List<User> users = userRepository.findAllBySpotifyUsername(username);
+        System.out.println("Update minigame time for user: " + username);
+        if (users.isEmpty()) {
+            return false;
         }
+        User user = users.get(0);
+        if (typeOfGame.equals("artists")) {
+            if (user.getArtistsMinigameBestTimeInSeconds() == null || newTime < user.getArtistsMinigameBestTimeInSeconds()) {
+                user.setArtistsMinigameBestTimeInSeconds(newTime);
+                System.out.println(user.getArtistsMinigameBestTimeInSeconds());
+                System.out.println(user.getSpotifyUsername());
+                userRepository.save(user);
+                return true;
+            }
+        } else if (typeOfGame.equals("songs")) {
+            if (user.getSongsMinigameBestTimeInSeconds() == null || newTime < user.getSongsMinigameBestTimeInSeconds()) {
+                user.setSongsMinigameBestTimeInSeconds(newTime);
+                userRepository.save(user);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Long getUserArtistMinigameTime(String username) throws Exception {
+        List<User> users = userRepository.findAllBySpotifyUsername(username);
+        if (users.isEmpty()) {
+            return null;
+        }
+        User user = users.get(0);
+        return user.getArtistsMinigameBestTimeInSeconds();
+        
+    }
+
+    @Override
+    public Long getUserSongMinigameTime(String username) throws Exception {
+        List<User> users = userRepository.findAllBySpotifyUsername(username);
+        if (users.isEmpty()) {
+            return null;
+        }
+        User user = users.get(0);
+        System.out.println(user.getSongsMinigameBestTimeInSeconds());
+        return user.getSongsMinigameBestTimeInSeconds();
+    }
+
+    @Override
+    public boolean deleteArtistMinigameScore(String username) throws Exception {
+        List<User> users = userRepository.findAllBySpotifyUsername(username);
+        if (users.isEmpty()) {
+            return false;
+        }
+        User user = users.get(0);
+        user.setArtistsMinigameBestTimeInSeconds(null);
+        userRepository.save(user);
+        return true;
+    }
+
+    @Override
+    public boolean deleteSongMinigameScore(String username) throws Exception {
+        List<User> users = userRepository.findAllBySpotifyUsername(username);
+        if (users.isEmpty()) {
+            return false;
+        }
+        User user = users.get(0);
+        user.setSongsMinigameBestTimeInSeconds(null);
+        userRepository.save(user);
         return true;
     }
 }

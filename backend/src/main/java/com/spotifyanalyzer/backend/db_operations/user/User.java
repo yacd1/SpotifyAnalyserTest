@@ -12,16 +12,12 @@ public class User {
     @Field("spotify_username")
     private String spotifyUsername;
 
-    @Field("minigame_best_time_in_seconds")
-    private Long minigameBestTimeInSeconds;
 
-    // Constructors
-    public User() {}
+    @Field("artists_minigame_best_time_in_seconds")
+    private Long artistsMinigameBestTimeInSeconds;
 
-    public User(String spotifyUsername, Long minigameBestTimeInSeconds) {
-        this.spotifyUsername = spotifyUsername;
-        this.minigameBestTimeInSeconds = minigameBestTimeInSeconds;
-    }
+    @Field("songs_minigame_best_time_in_seconds")
+    private Long songsMinigameBestTimeInSeconds;
 
     // Getters and Setters
     public String getId() {
@@ -40,11 +36,20 @@ public class User {
         this.spotifyUsername = spotifyUsername;
     }
 
-    public Long getMinigameBestTimeInSeconds() {
-        return minigameBestTimeInSeconds;
+    public Long getArtistsMinigameBestTimeInSeconds() {
+        return artistsMinigameBestTimeInSeconds;
     }
 
-    public void setMinigameBestTimeInSeconds(Long minigameBestTimeInSeconds) {
-        this.minigameBestTimeInSeconds = minigameBestTimeInSeconds;
+    public void setArtistsMinigameBestTimeInSeconds(Long artistsMinigameBestTimeInSeconds) {
+        this.artistsMinigameBestTimeInSeconds = artistsMinigameBestTimeInSeconds;
     }
+
+    public Long getSongsMinigameBestTimeInSeconds() {
+        return songsMinigameBestTimeInSeconds;
+    }
+    public void setSongsMinigameBestTimeInSeconds(Long songsMinigameBestTimeInSeconds) {
+        this.songsMinigameBestTimeInSeconds = songsMinigameBestTimeInSeconds;
+    }
+
+
 }

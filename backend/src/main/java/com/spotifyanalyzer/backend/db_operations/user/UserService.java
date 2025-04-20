@@ -10,8 +10,8 @@ public interface UserService
     public boolean updateMinigameTime(String username, long newTime, String typeOfGame) throws Exception;
     public boolean deleteBothMinigameScores(String username) throws Exception;
     public Long getUserArtistMinigameTime(String username) throws Exception;
-    public Long getUserSongMinigameTime(String username) throws Exception;
+    public Long getUserTrackMinigameTime(String username) throws Exception;
     public boolean deleteArtistMinigameScore(String username) throws Exception;
-    public boolean deleteSongMinigameScore(String username) throws Exception;
+    public boolean deleteTrackMinigameScore(String username) throws Exception;
 }
 

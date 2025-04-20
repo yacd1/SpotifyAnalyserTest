@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/db/users")
@@ -62,11 +61,10 @@ public class UserDatabaseController
                         HttpStatus.OK
                 );
             }
-                return new ResponseEntity<>(
+            return new ResponseEntity<>(
                         Map.of("artistMinigameTime", time),
                         HttpStatus.OK
                 );
-
         } catch (Exception e) {
             return new ResponseEntity<>(
                     Map.of("error", "Error: " + e.getMessage()),
@@ -75,20 +73,20 @@ public class UserDatabaseController
         }
     }
 
-    @GetMapping("/getUserSongMinigameTime")
-    public ResponseEntity<?> getUserSongMinigameTime(@RequestParam String username) {
+    @GetMapping("/getUserTrackMinigameTime")
+    public ResponseEntity<?> getUserTrackMinigameTime(@RequestParam String username) {
         try {
-            Long time = userService.getUserSongMinigameTime(username);
+            Long time = userService.getUserTrackMinigameTime(username);
             System.out.println("Time: " + time);
                 if (time == null) {
                     return new ResponseEntity<>(
-                            Map.of("songMinigameTime", false),
+                            Map.of("trackMinigameTime", false),
                             HttpStatus.OK
                     );
                 }
 
                 return new ResponseEntity<>(
-                        Map.of("songMinigameTime", time),
+                        Map.of("trackMinigameTime", time),
                         HttpStatus.OK
                 );
 
@@ -116,10 +114,10 @@ public class UserDatabaseController
         }
     }
 
-    @PutMapping("/updateSongMinigameTime")
-    public ResponseEntity<?> updateSongMinigameTime(@RequestParam String username, @RequestParam long newTime) {
+    @PutMapping("/updateTrackMinigameTime")
+    public ResponseEntity<?> updateTrackMinigameTime(@RequestParam String username, @RequestParam long newTime) {
         try {
-            boolean wasUpdated = userService.updateMinigameTime(username, newTime, "songs");
+            boolean wasUpdated = userService.updateMinigameTime(username, newTime, "tracks");
 
             return getResponseMessage(wasUpdated);
         } catch (Exception e) {
@@ -151,7 +149,7 @@ public class UserDatabaseController
                 );
             } else {
                 return new ResponseEntity<>(
-                        Map.of("message", "No score found to delete"),
+                        Map.of("message", "Could not delete"),
                         HttpStatus.OK
                 );
             }
@@ -187,19 +185,19 @@ public class UserDatabaseController
         }
     }
 
-    @DeleteMapping("/deleteSongMinigameScore")
-    public ResponseEntity<?> deleteSongMinigameScore(@RequestParam String username) {
+    @DeleteMapping("/deleteTrackMinigameScore")
+    public ResponseEntity<?> deleteTrackMinigameScore(@RequestParam String username) {
         try {
-            boolean deleted = userService.deleteSongMinigameScore(username);
+            boolean deleted = userService.deleteTrackMinigameScore(username);
 
             if (deleted) {
                 return new ResponseEntity<>(
-                        Map.of("message", "Song minigame score deleted successfully"),
+                        Map.of("message", "Track minigame score deleted successfully"),
                         HttpStatus.OK
                 );
             } else {
                 return new ResponseEntity<>(
-                        Map.of("message", "No song score found to delete"),
+                        Map.of("message", "No Track score found to delete"),
                         HttpStatus.OK
                 );
             }

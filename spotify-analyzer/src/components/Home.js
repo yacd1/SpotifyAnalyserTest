@@ -78,9 +78,9 @@ const Home = () => {
         try {
             const status = await apiService.checkSpotifyStatus();
             if (status.authenticated && status.profile) {
-                const trackScoreResponse = await apiService.getUserSongMinigameTime(status.profile.display_name);
-                if (trackScoreResponse.songMinigameTime !== false) {
-                    setTrackGameHighScore(trackScoreResponse.songMinigameTime);
+                const trackScoreResponse = await apiService.getUserTrackMinigameTime(status.profile.display_name);
+                if (trackScoreResponse.trackMinigameTime !== false) {
+                    setTrackGameHighScore(trackScoreResponse.trackMinigameTime);
                 } else {
                     setTrackGameHighScore("--");
                 }
@@ -115,6 +115,7 @@ const Home = () => {
                 err.message.includes("authenticated")) {
                 sessionStorage.removeItem('spotify_access_token');
                 setAccessToken(null);
+                console.log("token expired, redirecting to login");
                 navigate('/login');
                 return;
             }
@@ -141,6 +142,7 @@ const Home = () => {
     useEffect(() => {
         if (!accessToken) {
             // redirect if not authenticated
+            console.log("no access token found, redirecting to login");
             navigate('/login');
             return;
         }
@@ -163,7 +165,6 @@ const Home = () => {
             fetchTopSongs();
             fetchArtistGameHighScore();
             fetchTrackGameHighScore();
-            addUserToDatabase();
         }
     }, [timeRange]);
 

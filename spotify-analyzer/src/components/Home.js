@@ -163,7 +163,6 @@ const Home = () => {
             fetchTopSongs();
             fetchArtistGameHighScore();
             fetchTrackGameHighScore();
-            addUserToDatabase();
         }
     }, [timeRange]);
 

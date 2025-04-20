@@ -1,7 +1,9 @@
 package com.spotifyanalyzer.backend.db_operations.user;
 
+import lombok.Synchronized;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -11,8 +13,9 @@ public class UserServiceImplementation implements UserService
     @Autowired
     private UserRepository userRepository;
 
-    @Override
-    public void registerUser(String username) throws Exception {
+    @Transactional
+    @Synchronized
+    public void registerUser(String username){
         // Check if the user already exists
         User existingUser = getUserFromUsername(username);
         if (existingUser != null) {
@@ -49,7 +52,7 @@ public class UserServiceImplementation implements UserService
     }
 
     @Override
-    public boolean deleteBothMinigameScores(String username) throws Exception {
+    public boolean deleteBothMinigameScores(String username){
         User user = getUserFromUsername(username);
         if (user == null) return false;
         user.setArtistsMinigameBestTimeInSeconds(null);
@@ -59,7 +62,7 @@ public class UserServiceImplementation implements UserService
     }
 
     @Override
-    public boolean updateMinigameTime(String username, long newTime, String typeOfGame) throws Exception {
+    public boolean updateMinigameTime(String username, long newTime, String typeOfGame){
         User user = getUserFromUsername(username);
         if (user == null) return false;
         if (typeOfGame.equals("artists")) {
@@ -95,7 +98,7 @@ public class UserServiceImplementation implements UserService
     }
 
     @Override
-    public boolean deleteArtistMinigameScore(String username) throws Exception {
+    public boolean deleteArtistMinigameScore(String username) {
         User user = getUserFromUsername(username);
         if (user == null) return false;
         user.setArtistsMinigameBestTimeInSeconds(null);
@@ -104,7 +107,7 @@ public class UserServiceImplementation implements UserService
     }
 
     @Override
-    public boolean deleteTrackMinigameScore(String username) throws Exception {
+    public boolean deleteTrackMinigameScore(String username) {
         User user = getUserFromUsername(username);
         if (user == null) return false;
         user.setTracksMinigameBestTimeInSeconds(null);

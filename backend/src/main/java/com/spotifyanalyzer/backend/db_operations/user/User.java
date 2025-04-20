@@ -16,8 +16,8 @@ public class User {
     @Field("artists_minigame_best_time_in_seconds")
     private Long artistsMinigameBestTimeInSeconds;
 
-    @Field("songs_minigame_best_time_in_seconds")
-    private Long songsMinigameBestTimeInSeconds;
+    @Field("tracks_minigame_best_time_in_seconds")
+    private Long tracksMinigameBestTimeInSeconds;
 
     // Getters and Setters
     public String getId() {
@@ -44,11 +44,11 @@ public class User {
         this.artistsMinigameBestTimeInSeconds = artistsMinigameBestTimeInSeconds;
     }
 
-    public Long getSongsMinigameBestTimeInSeconds() {
-        return songsMinigameBestTimeInSeconds;
+    public Long getTracksMinigameBestTimeInSeconds() {
+        return tracksMinigameBestTimeInSeconds;
     }
-    public void setSongsMinigameBestTimeInSeconds(Long songsMinigameBestTimeInSeconds) {
-        this.songsMinigameBestTimeInSeconds = songsMinigameBestTimeInSeconds;
+    public void setTracksMinigameBestTimeInSeconds(Long tracksMinigameBestTimeInSeconds) {
+        this.tracksMinigameBestTimeInSeconds = tracksMinigameBestTimeInSeconds;
     }
 
 

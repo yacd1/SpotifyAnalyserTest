@@ -96,7 +96,7 @@ function Minigames() {
             if (gameType === "artists") {
                 const response = await apiService.updateArtistMinigameTime(userProfile.display_name, elapsedTime)
             } else {
-                const response = await apiService.updateSongMinigameTime(userProfile.display_name, elapsedTime)
+                const response = await apiService.updateTrackMinigameTime(userProfile.display_name, elapsedTime)
             }
 
             // Handle the response
@@ -108,7 +108,7 @@ function Minigames() {
                    const currentBestTime = await apiService.getArtistMinigameTime(userProfile.display_name);
                 }
                 if (gameType === "tracks") {
-                    const currentBestTime = await apiService.getSongMinigameTime(userProfile.display_name);
+                    const currentBestTime = await apiService.getTrackMinigameTime(userProfile.display_name);
                 }
                 setScoreMessage(`Your best score is still: ${currentBestTime}s`);
             }

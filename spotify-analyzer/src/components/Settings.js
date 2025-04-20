@@ -31,9 +31,9 @@ function Settings() {
                             setArtistGameHighScore(null);
                         }
 
-                        const trackScoreResponse = await apiService.getUserSongMinigameTime(status.profile.display_name);
-                        if (trackScoreResponse.songMinigameTime !== false) {
-                            setTrackGameHighScore(trackScoreResponse.songMinigameTime);
+                        const trackScoreResponse = await apiService.getUserTrackMinigameTime(status.profile.display_name);
+                        if (trackScoreResponse.trackMinigameTime !== false) {
+                            setTrackGameHighScore(trackScoreResponse.trackMinigameTime);
                             console.log("Track score:", trackScoreResponse);
                         }
                         else {
@@ -70,7 +70,7 @@ function Settings() {
 
             } else if (scoreType === 'track') {
 
-                    await apiService.deleteSongMinigameScore(userProfile.display_name);
+                    await apiService.deleteTrackMinigameScore(userProfile.display_name);
                     setMessage('Track game high score deleted successfully!');
                     setTrackGameHighScore(null);
 

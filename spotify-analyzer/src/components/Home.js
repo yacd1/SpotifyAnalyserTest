@@ -78,9 +78,9 @@ const Home = () => {
         try {
             const status = await apiService.checkSpotifyStatus();
             if (status.authenticated && status.profile) {
-                const trackScoreResponse = await apiService.getUserSongMinigameTime(status.profile.display_name);
-                if (trackScoreResponse.songMinigameTime !== false) {
-                    setTrackGameHighScore(trackScoreResponse.songMinigameTime);
+                const trackScoreResponse = await apiService.getUserTrackMinigameTime(status.profile.display_name);
+                if (trackScoreResponse.trackMinigameTime !== false) {
+                    setTrackGameHighScore(trackScoreResponse.trackMinigameTime);
                 } else {
                     setTrackGameHighScore("--");
                 }

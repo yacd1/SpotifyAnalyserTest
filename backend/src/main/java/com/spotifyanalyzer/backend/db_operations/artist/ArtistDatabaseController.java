@@ -17,50 +17,75 @@ public class ArtistDatabaseController
 
     //Adds the artist
     @PostMapping("/add")
-    public ResponseEntity<Artist> register(@RequestBody Artist artist) throws Exception
+    public ResponseEntity<Artist> register(@RequestBody Artist artist)
     {
-        if(artist!=null)
-        {
-            artistService.addArtist(artist);
-            return new ResponseEntity<>(artist, HttpStatus.CREATED);
+        try {
+            if (artist != null) {
+                artistService.addArtist(artist);
+                return new ResponseEntity<>(artist, HttpStatus.CREATED);
+            }
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        catch (Exception e)
+        {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     //Get all the registered artists.
     @GetMapping("/getAllArtists")
-    public ResponseEntity<List<Artist>> getRegisteredArtist() throws Exception
+    public ResponseEntity<List<Artist>> getRegisteredArtist()
     {
-        List<Artist> artists=artistService.getRegisteredArtists();
-        if (artists!=null)
+        try
         {
+            List<Artist> artists = artistService.getRegisteredArtists();
             return new ResponseEntity<>(artists,HttpStatus.OK);
         }
-        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        catch (Exception e)
+        {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     //update artist summary
     @PutMapping("/updateArtistSummary")
-    public ResponseEntity<Artist> updateArtistSummary(@RequestParam String artistName, @RequestParam String summary) throws Exception
+    public ResponseEntity<Artist> updateArtistSummary(@RequestParam String artistName, @RequestParam String summary)
     {
-        Artist artist = artistService.updateArtistSummary(artistName, summary);
-        if (artist != null)
+        try
         {
-            return new ResponseEntity<>(artist, HttpStatus.OK);
+            if (artistName == null || summary == null)
+            {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            else {
+                Artist artist = artistService.updateArtistSummary(artistName, summary);
+                return new ResponseEntity<>(artist, HttpStatus.OK);
+            }
         }
-        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        catch (Exception e)
+        {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     //get artist by name
     @GetMapping("/getArtistByName")
-    public ResponseEntity<Artist> getArtistByName(@RequestParam String artistName) throws Exception
+    public ResponseEntity<Artist> getArtistByName(@RequestParam String artistName)
     {
-        Artist artist = artistService.getArtistByName(artistName);
-        if (artist != null)
-        {
-            return new ResponseEntity<>(artist, HttpStatus.OK);
+        try{
+            if (artistName == null)
+            {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            else {
+                Artist artist = artistService.getArtistByName(artistName);
+                return new ResponseEntity<>(artist, HttpStatus.OK);
+            }
         }
-        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        catch (Exception e)
+        {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 }

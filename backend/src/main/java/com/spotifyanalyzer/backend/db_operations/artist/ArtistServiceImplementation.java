@@ -25,7 +25,7 @@ public class ArtistServiceImplementation implements ArtistService
     public List<Artist> getRegisteredArtists() throws Exception
     {
         List<Artist> artists = artistRepository.findAll();
-        if(artists!=null)
+        if(!artists.isEmpty())
         {
             return artists;
         }

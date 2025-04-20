@@ -14,7 +14,7 @@ public class UserServiceImplementation implements UserService
     @Override
     public void registerUser(String username) throws Exception {
         // Check if the user already exists
-        User existingUser = userRepository.findBySpotifyUsername(username);
+        User existingUser = getUserFromUsername(username);
         if (existingUser != null) {
             // User already exists, no need to register again
             return;

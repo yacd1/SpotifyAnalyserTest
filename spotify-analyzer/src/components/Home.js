@@ -115,6 +115,7 @@ const Home = () => {
                 err.message.includes("authenticated")) {
                 sessionStorage.removeItem('spotify_access_token');
                 setAccessToken(null);
+                console.log("token expired, redirecting to login");
                 navigate('/login');
                 return;
             }
@@ -141,6 +142,7 @@ const Home = () => {
     useEffect(() => {
         if (!accessToken) {
             // redirect if not authenticated
+            console.log("no access token found, redirecting to login");
             navigate('/login');
             return;
         }

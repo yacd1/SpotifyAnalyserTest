@@ -19,13 +19,13 @@ const Login = () => {
             // check if there's already a session
             try {
                 const authStatus = await apiService.checkSpotifyStatus();
-                if (authStatus.authenticated) {
-                    //console.log("authenticated, redirecting to home");
+                if ( (sessionStorage.getItem('spotify_access_token') != null) && authStatus.authenticated) {
+                    console.log("authenticated, redirecting to home");
                     navigate('/home');
                     return;
                 }
             } catch (err) {
-                //console.log("unauthenticated");
+                console.log("unauthenticated");
             }
 
             if (location.pathname === '/callback') {
@@ -37,7 +37,7 @@ const Login = () => {
 
                 if (code && !isProcessingCode) {
                     isProcessingCode = true;
-                    //console.log("found authorisation code, exchanging for token...");
+                    console.log("found authorisation code, exchanging for token...");
 
                     try {
                         setLoading(true);
@@ -46,7 +46,7 @@ const Login = () => {
                         const data = await apiService.exchangeCodeForToken(code);
 
                         if (data && data.access_token) {
-                            //console.log("token exchange successful");
+                            console.log("token exchange successful");
 
                             // store token in sessionStorage
                             sessionStorage.setItem('spotify_access_token', data.access_token);
@@ -57,13 +57,15 @@ const Login = () => {
                                     const status = await apiService.checkSpotifyStatus();
 
                                     if (status.authenticated) {
-                                        //console.log("authenticated, redirecting to home");
+                                        console.log("authenticated, redirecting to home");
                                         navigate('/home');
                                     } else {
                                         // even if session check fails, try continuing with the token we have
+                                        console.log("NOT authenticated, redirecting to home");
                                         navigate('/home');
                                     }
                                 } catch (statusErr) {
+                                    console.error("ERROR checking authentication status:", statusErr);
                                     navigate('/home');
                                 }
                             }, 500);
@@ -71,13 +73,13 @@ const Login = () => {
                             throw new Error("no access token received");
                         }
                     } catch (err) {
-                        //console.error("authentication error:", err);
+                        console.error("authentication error:", err);
                         setError("Failed to authenticate with Spotify. Please try again");
                         setLoading(false);
                         isProcessingCode = false;
                     }
                 } else if (!code) {
-                    //console.log("no auth code found in URL");
+                    console.log("no auth code found in URL");
                     setLoading(false);
                 }
             } else {
@@ -103,7 +105,7 @@ const Login = () => {
             // redirect to Spotify authorisation page
             window.location.href = data.authUrl;
         } catch (err) {
-            //console.error("login error:", err);
+            console.error("login error:", err);
             setError("Failed to connect to Spotify. Please try again");
             setLoading(false);
         }

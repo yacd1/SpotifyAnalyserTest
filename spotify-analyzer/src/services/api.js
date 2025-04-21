@@ -85,13 +85,8 @@ export const apiService = {
 
     getAllArtists: async () => fetchHelper(`${BACKEND_URL}/db/artists/getAllArtists`),
 
-    updateArtistSummary: async (artistName, summary) =>
-        fetchHelper(`${BACKEND_URL}/db/artists/updateArtistSummary?artistName=${encodeURIComponent(artistName)}&summary=${encodeURIComponent(summary)}`, {
-            method: 'PUT',
-        }),
-
-    updateArtistSummary1: async (artistName, summary) =>
-        fetchHelper(`${BACKEND_URL}/db/artists/updateArtistSummary1?artistName=${encodeURIComponent(artistName)}`, {
+    fetchArtistSummary: async (artistName, summary) =>
+        fetchHelper(`${BACKEND_URL}/db/artists/fetchArtistSummary?artistName=${encodeURIComponent(artistName)}`, {
             method: 'PUT',
         }),
 

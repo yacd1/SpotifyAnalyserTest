@@ -46,18 +46,6 @@ public class ArtistServiceImplementation implements ArtistService
     }
 
     @Override
-    public Artist updateArtistSummary(String artistName, String summary) throws Exception
-    {
-        Artist artist = artistRepository.findByArtistName(artistName);
-        if (artist != null)
-        {
-            artist.setSummary(summary);
-            return artistRepository.save(artist);
-        }
-        throw new Exception("Artist not found");
-    }
-
-    @Override
     public Artist getArtistByName(String artistName) throws Exception
     {
         Artist artist = artistRepository.findByArtistName(artistName);
@@ -69,8 +57,10 @@ public class ArtistServiceImplementation implements ArtistService
     }
 
     @Override
-    public String updateArtistSummary1(String artistName) throws JsonProcessingException {
+    public String fetchArtistSummary(String artistName) throws JsonProcessingException {
         Artist artist = artistRepository.findByArtistName(artistName);
+
+        // if the artist is not found in the database, add in the database
         if (artist == null)
         {
             artist = new Artist();
@@ -100,6 +90,7 @@ public class ArtistServiceImplementation implements ArtistService
 
     private String getSummaryFromMicroservice(String artistName) throws JsonProcessingException {
         String encodedArtistName = URLEncoder.encode(artistName, StandardCharsets.UTF_8);
+        // Construct the URL for the microservice
         String baseUrl = backendUrl + "/api/spotify/data/artist-summary";
         String url = baseUrl + "?artistName=" + encodedArtistName;
         RestTemplate restTemplate = new RestTemplate();
@@ -108,6 +99,7 @@ public class ArtistServiceImplementation implements ArtistService
 
         if (response.getStatusCode().is2xxSuccessful())
         {
+            // Parse the JSON response to extract the summary
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode rootNode = objectMapper.readTree(response.getBody());
             return rootNode.get("artist_summary").asText();

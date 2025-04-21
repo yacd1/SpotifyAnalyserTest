@@ -49,29 +49,8 @@ public class ArtistDatabaseController
     }
 
     //update artist summary
-    @PutMapping("/updateArtistSummary")
-    public ResponseEntity<Artist> updateArtistSummary(@RequestParam String artistName, @RequestParam String summary)
-    {
-        try
-        {
-            if (artistName == null || summary == null)
-            {
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            }
-            else {
-                Artist artist = artistService.updateArtistSummary(artistName, summary);
-                return new ResponseEntity<>(artist, HttpStatus.OK);
-            }
-        }
-        catch (Exception e)
-        {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    //update artist summary
-    @PutMapping("/updateArtistSummary1")
-    public ResponseEntity<Map<String,String>> updateArtistSummary1(@RequestParam String artistName)
+    @PutMapping("/fetchArtistSummary")
+    public ResponseEntity<Map<String,String>> fetchArtistSummary(@RequestParam String artistName)
     {
         try
         {
@@ -80,8 +59,8 @@ public class ArtistDatabaseController
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
             else {
-                String summary1 = artistService.updateArtistSummary1(artistName);
-                return new ResponseEntity<>(Map.of("ArtistSummary", summary1), HttpStatus.OK);
+                String summary = artistService.fetchArtistSummary(artistName);
+                return new ResponseEntity<>(Map.of("ArtistSummary", summary), HttpStatus.OK);
             }
         }
         catch (Exception e)

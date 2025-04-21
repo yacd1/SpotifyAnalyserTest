@@ -75,7 +75,7 @@ function Artists() {
         try {
             if (artistInfo) {
                 setSummaryLoading(true);
-                const summary = await apiService.updateArtistSummary1(artistInfo.name);
+                const summary = await apiService.fetchArtistSummary(artistInfo.name);
                 setArtistSummary(summary["ArtistSummary"]);
                 setIsSummaryModalOpen(true);
             }

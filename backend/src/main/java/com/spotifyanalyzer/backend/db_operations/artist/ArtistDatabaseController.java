@@ -68,6 +68,27 @@ public class ArtistDatabaseController
         }
     }
 
+    //update artist summary
+    @PutMapping("/updateArtistSummary1")
+    public ResponseEntity<String> updateArtistSummary1(@RequestParam String artistName)
+    {
+        try
+        {
+            if (artistName == null)
+            {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            else {
+                String summary1 = artistService.updateArtistSummary1(artistName);
+                return new ResponseEntity<>(summary1, HttpStatus.OK);
+            }
+        }
+        catch (Exception e)
+        {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     //get artist by name
     @GetMapping("/getArtistByName")
     public ResponseEntity<Artist> getArtistByName(@RequestParam String artistName)

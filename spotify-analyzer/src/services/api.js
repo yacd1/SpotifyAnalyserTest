@@ -90,6 +90,11 @@ export const apiService = {
             method: 'PUT',
         }),
 
+    updateArtistSummary1: async (artistName, summary) =>
+        fetchHelper(`${BACKEND_URL}/db/artists/updateArtistSummary1?artistName=${encodeURIComponent(artistName)}`, {
+            method: 'PUT',
+        }),
+
     getArtistByName: async (artistName) =>
         fetchHelper(`${BACKEND_URL}/db/artists/getArtistByName?artistName=${encodeURIComponent(artistName)}`),
 

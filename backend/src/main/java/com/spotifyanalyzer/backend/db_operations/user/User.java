@@ -12,6 +12,8 @@ public class User {
     @Field("spotify_username")
     private String spotifyUsername;
 
+    @Field("spotify_id")
+    private String spotifyId;
 
     @Field("artists_minigame_best_time_in_seconds")
     private Long artistsMinigameBestTimeInSeconds;
@@ -34,6 +36,14 @@ public class User {
 
     public void setSpotifyUsername(String spotifyUsername) {
         this.spotifyUsername = spotifyUsername;
+    }
+
+    public String getSpotifyId() {
+        return spotifyId;
+    }
+
+    public void setSpotifyId(String spotifyId) {
+        this.spotifyId = spotifyId;
     }
 
     public Long getArtistsMinigameBestTimeInSeconds() {

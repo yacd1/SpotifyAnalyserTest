@@ -82,38 +82,46 @@ function Minigames() {
             setGameComplete(true);
 
             localStorage.setItem('gameCompleted', 'true');
-            if (mode === "artists") {
-                saveHighScore("artists");
-            } else {
-                saveHighScore("tracks");
+            if (userProfile && userProfile.id) {
+                if (mode === "artists") {
+                    saveHighScore("artists");
+                } else {
+                    saveHighScore("tracks");
+                }
             }
         }
-    }, [artists, tracks, mode, timerActive]);
+    }, [artists, tracks, mode, timerActive, userProfile]);
 
     const saveHighScore = async (gameType) => {
         try {
-
-            if (gameType === "artists") {
-                const response = await apiService.updateArtistMinigameTime(userProfile.display_name, elapsedTime)
-            } else {
-                const response = await apiService.updateTrackMinigameTime(userProfile.display_name, elapsedTime)
+            if (!userProfile || !userProfile.id) {
+                setScoreMessage("Unable to save score: user profile not available");
+                return;
             }
 
-            // Handle the response
+            let response;
+            let currentBestTime;
+
+            if (gameType === "artists") {
+                response = await apiService.updateArtistMinigameTimeById(userProfile.id, elapsedTime);
+                if (!response.updated) {
+                    currentBestTime = await apiService.getUserArtistMinigameTimeById(userProfile.id);
+                }
+            } else {
+                response = await apiService.updateTrackMinigameTimeById(userProfile.id, elapsedTime);
+                if (!response.updated) {
+                    currentBestTime = await apiService.getUserTrackMinigameTimeById(userProfile.id);
+                }
+            }
+
             if (response.updated) {
                 setScoreMessage(`New high score: ${elapsedTime}s!`);
             } else {
-
-                if (gameType === "artists") {
-                   const currentBestTime = await apiService.getArtistMinigameTime(userProfile.display_name);
-                }
-                if (gameType === "tracks") {
-                    const currentBestTime = await apiService.getTrackMinigameTime(userProfile.display_name);
-                }
-                setScoreMessage(`Your best score is still: ${currentBestTime}s`);
+                const bestTime = currentBestTime?.artistMinigameTime || currentBestTime?.trackMinigameTime;
+                setScoreMessage(`Your best score is still: ${bestTime}s`);
             }
         } catch (error) {
-            console.error("Error saving high score:", error);
+            console.error("error saving high score:", error);
             setScoreMessage("Error saving your score. Try again later.");
         }
     };

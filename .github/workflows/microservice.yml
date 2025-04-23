@@ -20,9 +20,8 @@ jobs:
           source venv/bin/activate
           pip install -r requirements.txt
           pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install pytest
 
-      - name: Run tests
+      - name: Run tests with unittest
         working-directory: py-microservice
         run: |
           source venv/bin/activate
@@ -31,5 +30,6 @@ jobs:
       - name: Syntax & Import Check
         working-directory: py-microservice
         run: |
+          source venv/bin/activate
           find . -name "*.py" -exec python -m py_compile {} \;
           python -c "import main"

@@ -20,8 +20,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 
-
-
 @RestController
 @RequestMapping("/api/spotify")
 public class SpotifyController {
@@ -36,6 +34,37 @@ public class SpotifyController {
     public SpotifyController(SpotifyService spotifyService) {
         this.spotifyService = spotifyService;
         this.pythonService = new PythonService();
+    }
+
+    private String getValidAccessToken(HttpSession session) {
+        String accessToken = (String) session.getAttribute("spotify_access_token");
+
+        if (accessToken == null) {
+            return null;
+        }
+
+        // check if token is expired
+        Long expiryTime = (Long) session.getAttribute("spotify_token_expiry");
+        if (expiryTime != null && System.currentTimeMillis() > expiryTime) {
+            // if the tooken is expired, attempt to refresh
+            String refreshToken = (String) session.getAttribute("spotify_refresh_token");
+            if (refreshToken != null) {
+                try {
+                    SpotifyAuthResponse refreshResponse = spotifyService.refreshAccessToken(refreshToken);
+                    session.setAttribute("spotify_access_token", refreshResponse.getAccessToken());
+
+                    long newExpiryTime = System.currentTimeMillis() + (refreshResponse.getExpiresIn() * 1000);
+                    session.setAttribute("spotify_token_expiry", newExpiryTime);
+
+                    accessToken = refreshResponse.getAccessToken();
+                } catch (Exception e) {
+                    System.out.println("Failed to refresh token: " + e.getMessage());
+                    return null; // Token refresh failed
+                }
+            }
+        }
+
+        return accessToken;
     }
 
     @GetMapping("/login")
@@ -113,7 +142,7 @@ public class SpotifyController {
             @RequestParam(value = "limit", defaultValue = "10") int limit,
             HttpSession session) {
 
-        String accessToken = (String) session.getAttribute("spotify_access_token");
+        String accessToken = getValidAccessToken(session);
 
         if (accessToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -121,31 +150,6 @@ public class SpotifyController {
         }
 
         try {
-            // check if token is expired
-            Long expiryTime = (Long) session.getAttribute("spotify_token_expiry");
-            if (expiryTime != null && System.currentTimeMillis() > expiryTime) {
-                // token is expired so attempt a refresh
-                String refreshToken = (String) session.getAttribute("spotify_refresh_token");
-                if (refreshToken != null) {
-                    try {
-                        SpotifyAuthResponse refreshResponse = spotifyService.refreshAccessToken(refreshToken);
-                        session.setAttribute("spotify_access_token", refreshResponse.getAccessToken());
-
-                        // correct our expiry time
-                        long newExpiryTime = System.currentTimeMillis() + (refreshResponse.getExpiresIn() * 1000);
-                        session.setAttribute("spotify_token_expiry", newExpiryTime);
-
-                        accessToken = refreshResponse.getAccessToken();
-                        //System.out.println("Token refreshed successfully");
-                    } catch (Exception e) {
-                        // we can just assume they are logged out and make them log in
-                        //System.out.println("failed to refresh token: " + e.getMessage());
-                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                .body(Map.of("error", "Authentication expired"));
-                    }
-                }
-            }
-
             // making the actual request to the spotify API
             Object topArtists = spotifyService.makeSpotifyRequest(
                     "/me/top/artists?time_range=" + timeRange + "&limit=" + limit,
@@ -169,7 +173,7 @@ public class SpotifyController {
             @RequestParam(value = "limit", defaultValue = "10") int limit,
             HttpSession session) {
 
-        String accessToken = (String) session.getAttribute("spotify_access_token");
+        String accessToken = getValidAccessToken(session);
 
         if (accessToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -177,25 +181,6 @@ public class SpotifyController {
         }
 
         try {
-            // check if token needs refreshing (just same logic as above)
-            // should probably refactor this??
-            Long expiryTime = (Long) session.getAttribute("spotify_token_expiry");
-            if (expiryTime != null && System.currentTimeMillis() > expiryTime) {
-                String refreshToken = (String) session.getAttribute("spotify_refresh_token");
-                if (refreshToken != null) {
-                    try {
-                        SpotifyAuthResponse refreshResponse = spotifyService.refreshAccessToken(refreshToken);
-                        session.setAttribute("spotify_access_token", refreshResponse.getAccessToken());
-                        long newExpiryTime = System.currentTimeMillis() + (refreshResponse.getExpiresIn() * 1000);
-                        session.setAttribute("spotify_token_expiry", newExpiryTime);
-                        accessToken = refreshResponse.getAccessToken();
-                    } catch (Exception e) {
-                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                .body(Map.of("error", "Authentication expired"));
-                    }
-                }
-            }
-
             // make the request
             Object topTracks = spotifyService.makeSpotifyRequest(
                     "/me/top/tracks?time_range=" + timeRange + "&limit=" + limit,
@@ -211,10 +196,11 @@ public class SpotifyController {
                             "message", e.getMessage()));
         }
     }
-    
+
     @GetMapping("/data/fake-recommendations")
     public ResponseEntity<?> getFakeRecommendations(HttpSession session) {
-        String accessToken = (String) session.getAttribute("spotify_access_token");
+        String accessToken = getValidAccessToken(session);
+
         if (accessToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Not authenticated with Spotify"));
@@ -263,7 +249,7 @@ public class SpotifyController {
             List<Map<String, Object>> filtered = allItems.stream()
                     .filter(t ->
                             !originalId.equals(t.get("id"))&&
-                            !originalName.equals(((String) t.get("name")).trim().toLowerCase()))
+                                    !originalName.equals(((String) t.get("name")).trim().toLowerCase()))
                     .collect(Collectors.toList());
 
             return ResponseEntity.ok(filtered);
@@ -278,7 +264,8 @@ public class SpotifyController {
     //endpoint for top genre does not exist - extracting it from top artists
     @GetMapping("/data/top-genre")
     public ResponseEntity<?> getTopGenre(HttpSession session) {
-        String accessToken = (String) session.getAttribute("spotify_access_token");
+        String accessToken = getValidAccessToken(session);
+
         if (accessToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Not authenticated with Spotify"));
@@ -320,17 +307,13 @@ public class SpotifyController {
         }
     }
 
-
-
-
-
     // end point for getting the tracks a user has JUST listened too
     @GetMapping("/data/recently-played")
     public ResponseEntity<?> getRecentlyPlayed(
             @RequestParam(value = "limit", defaultValue = "10") int limit,
             HttpSession session) {
 
-        String accessToken = (String) session.getAttribute("spotify_access_token");
+        String accessToken = getValidAccessToken(session);
 
         if (accessToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -338,17 +321,6 @@ public class SpotifyController {
         }
 
         try {
-            Long expiryTime = (Long) session.getAttribute("spotify_token_expiry");
-            if (expiryTime != null && System.currentTimeMillis() > expiryTime) {
-                String refreshToken = (String) session.getAttribute("spotify_refresh_token");
-                if (refreshToken != null) {
-                    SpotifyAuthResponse refreshResponse = spotifyService.refreshAccessToken(refreshToken);
-                    session.setAttribute("spotify_access_token", refreshResponse.getAccessToken());
-                    session.setAttribute("spotify_token_expiry", System.currentTimeMillis() + (refreshResponse.getExpiresIn() * 1000));
-                    accessToken = refreshResponse.getAccessToken();
-                }
-            }
-
             // call Spotify API for recently played - I can change limit to change the numebr displayed
             Object recentlyPlayed = spotifyService.makeSpotifyRequest(
                     "/me/player/recently-played?limit=" + limit,
@@ -365,7 +337,7 @@ public class SpotifyController {
                             "message", e.getMessage()));
         }
     }
-          
+
     @GetMapping("data/search")
     public ResponseEntity<?> getSearch(
             @RequestParam(value = "q", defaultValue = "") String q,
@@ -373,7 +345,7 @@ public class SpotifyController {
             @RequestParam(value = "type", defaultValue = "") String type,
             HttpSession session) {
 
-        String accessToken = (String) session.getAttribute("spotify_access_token");
+        String accessToken = getValidAccessToken(session);
 
         if (accessToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -381,25 +353,6 @@ public class SpotifyController {
         }
 
         try {
-            // check if token needs refreshing (just same logic as above)
-            // should probably refactor this??
-            Long expiryTime = (Long) session.getAttribute("spotify_token_expiry");
-            if (expiryTime != null && System.currentTimeMillis() > expiryTime) {
-                String refreshToken = (String) session.getAttribute("spotify_refresh_token");
-                if (refreshToken != null) {
-                    try {
-                        SpotifyAuthResponse refreshResponse = spotifyService.refreshAccessToken(refreshToken);
-                        session.setAttribute("spotify_access_token", refreshResponse.getAccessToken());
-                        long newExpiryTime = System.currentTimeMillis() + (refreshResponse.getExpiresIn() * 1000);
-                        session.setAttribute("spotify_token_expiry", newExpiryTime);
-                        accessToken = refreshResponse.getAccessToken();
-                    } catch (Exception e) {
-                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                .body(Map.of("error", "Authentication expired"));
-                    }
-                }
-            }
-
             // make the request
             Object searchResponse = spotifyService.makeSpotifyRequest(
                     "/search?q=" + q + "&type=" + type + "&limit=" + limit,
@@ -421,7 +374,8 @@ public class SpotifyController {
             @RequestParam(value = "artist_id") String artistID,
             HttpSession session) {
         System.out.println("Getting artist info for: " + artistID);
-        String accessToken = (String) session.getAttribute("spotify_access_token");
+
+        String accessToken = getValidAccessToken(session);
 
         if (accessToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -429,31 +383,6 @@ public class SpotifyController {
         }
 
         try {
-            // check if token is expired
-            Long expiryTime = (Long) session.getAttribute("spotify_token_expiry");
-            if (expiryTime != null && System.currentTimeMillis() > expiryTime) {
-                // token is expired so attempt a refresh
-                String refreshToken = (String) session.getAttribute("spotify_refresh_token");
-                if (refreshToken != null) {
-                    try {
-                        SpotifyAuthResponse refreshResponse = spotifyService.refreshAccessToken(refreshToken);
-                        session.setAttribute("spotify_access_token", refreshResponse.getAccessToken());
-
-                        // correct our expiry time
-                        long newExpiryTime = System.currentTimeMillis() + (refreshResponse.getExpiresIn() * 1000);
-                        session.setAttribute("spotify_token_expiry", newExpiryTime);
-
-                        accessToken = refreshResponse.getAccessToken();
-                        //System.out.println("Token refreshed successfully");
-                    } catch (Exception e) {
-                        // we can just assume they are logged out and make them log in
-                        //System.out.println("failed to refresh token: " + e.getMessage());
-                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                .body(Map.of("error", "Authentication expired"));
-                    }
-                }
-            }
-
             // making the actual request to the spotify API
             Object artistInfo = spotifyService.makeSpotifyRequest(
                     "/artists/" + artistID,

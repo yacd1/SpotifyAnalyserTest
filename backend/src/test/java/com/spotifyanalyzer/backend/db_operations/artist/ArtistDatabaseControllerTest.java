@@ -7,9 +7,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -28,87 +26,36 @@ class ArtistDatabaseControllerTest {
     }
 
     @Test
-    void testRegister() throws Exception {
-        Artist artist = new Artist("Test Summary", "Test Artist", new Date());
-        when(artistService.addArtist(artist)).thenReturn(artist);
+    void testFetchArtistSummary_Success() throws Exception {
+        String artistName = "The Beatles";
+        String summary = "The Beatles are arguably the most famous rock band of all time.";
+        when(artistService.fetchArtistSummary(artistName)).thenReturn(summary);
 
-        ResponseEntity<Artist> response = artistDatabaseController.register(artist);
-
-        assertEquals(201, response.getStatusCodeValue());
-        assertEquals(artist, response.getBody());
-    }
-
-    @Test
-    void testRegisterWithNullArtist() throws Exception {
-        Artist artist = null;
-        ResponseEntity<?> response = artistDatabaseController.register(artist);
-        assertEquals(500, response.getStatusCodeValue());
-    }
-
-    @Test
-    void testGetRegisteredArtist() throws Exception {
-        List<Artist> artists = Arrays.asList(
-                new Artist("Summary1", "Artist1", new Date()),
-                new Artist("Summary2", "Artist2", new Date())
-        );
-        when(artistService.getRegisteredArtists()).thenReturn(artists);
-
-        ResponseEntity<List<Artist>> response = artistDatabaseController.getRegisteredArtist();
+        ResponseEntity<Map<String, String>> response = artistDatabaseController.fetchArtistSummary(artistName);
 
         assertEquals(200, response.getStatusCodeValue());
-        assertEquals(artists, response.getBody());
-    }
-
-
-
-//    @Test
-//    void testUpdateArtistSummary() throws Exception {
-//        String artistName = "Test Artist";
-//        String summary = "Updated Summary";
-//        Artist updatedArtist = new Artist(summary, artistName, null);
-//        when(artistService.fetchArtistSummary(artistName, summary)).thenReturn(updatedArtist);
-//
-//        ResponseEntity<Artist> response = artistDatabaseController.updateArtistSummary(artistName, summary);
-//
-//        assertEquals(200, response.getStatusCodeValue());
-//        assertEquals(updatedArtist, response.getBody());
-//    }
-//
-//    @Test
-//    void testUpdateArtistSummaryWithNullArtist() throws Exception {
-//        String artistName = "Test Artist";
-//        String summary = null;
-//        ResponseEntity<?> response = artistDatabaseController.updateArtistSummary(artistName, summary);
-//        assertEquals(400, response.getStatusCodeValue());
-//    }
-//
-//    @Test
-//    void testUpdateArtistSummaryWithNullName() throws Exception {
-//        String artistName = null;
-//        String summary = "Updated Summary";
-//        ResponseEntity<?> response = artistDatabaseController.updateArtistSummary(artistName, summary);
-//        assertEquals(400, response.getStatusCodeValue());
-//    }
-//
-
-
-    @Test
-    void testGetArtistByName() throws Exception {
-        String artistName = "Test Artist";
-        Artist artist = new Artist("Test Summary", artistName, new Date());
-        when(artistService.getArtistByName(artistName)).thenReturn(artist);
-
-        ResponseEntity<Artist> response = artistDatabaseController.getArtistByName(artistName);
-
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals(artist, response.getBody());
-        verify(artistService, times(1)).getArtistByName(artistName);
+        assertEquals(Map.of("ArtistSummary", summary), response.getBody());
+        verify(artistService, times(1)).fetchArtistSummary(artistName);
     }
 
     @Test
-    void testGetArtistByNameWithNullName() throws Exception {
+    void testFetchArtistSummary_BadRequest() throws Exception {
         String artistName = null;
-        ResponseEntity<?> response = artistDatabaseController.getArtistByName(artistName);
+
+        ResponseEntity<Map<String, String>> response = artistDatabaseController.fetchArtistSummary(artistName);
+
         assertEquals(400, response.getStatusCodeValue());
+        verify(artistService, never()).fetchArtistSummary(anyString());
+    }
+
+    @Test
+    void testFetchArtistSummary_InternalServerError() throws Exception {
+        String artistName = "The Beatles";
+        when(artistService.fetchArtistSummary(artistName)).thenThrow(new RuntimeException("Service error"));
+
+        ResponseEntity<Map<String, String>> response = artistDatabaseController.fetchArtistSummary(artistName);
+
+        assertEquals(500, response.getStatusCodeValue());
+        verify(artistService, times(1)).fetchArtistSummary(artistName);
     }
 }

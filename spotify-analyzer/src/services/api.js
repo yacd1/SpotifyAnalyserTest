@@ -73,25 +73,10 @@ export const apiService = {
     getArtistInfo: async (artistID) =>
         fetchHelper(`${BACKEND_URL}/spotify/data/artist-info?artist_id=${artistID}`),
 
-    getArtistSummary: async (artistName) =>
-        fetchHelper(`${BACKEND_URL}/spotify/data/artist-summary?artistName=${artistName}`),
-
-    addArtist: async (artist) =>
-        fetchHelper(`${BACKEND_URL}/db/artists/add`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(artist),
-        }),
-
-    getAllArtists: async () => fetchHelper(`${BACKEND_URL}/db/artists/getAllArtists`),
-
     fetchArtistSummary: async (artistName, summary) =>
         fetchHelper(`${BACKEND_URL}/db/artists/fetchArtistSummary?artistName=${encodeURIComponent(artistName)}`, {
             method: 'PUT',
         }),
-
-    getArtistByName: async (artistName) =>
-        fetchHelper(`${BACKEND_URL}/db/artists/getArtistByName?artistName=${encodeURIComponent(artistName)}`),
 
     registerUser: async (username) =>
         fetchHelper(`${BACKEND_URL}/db/users/register?username=${encodeURIComponent(username)}`, {

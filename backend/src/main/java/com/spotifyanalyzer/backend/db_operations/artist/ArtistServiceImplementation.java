@@ -25,38 +25,6 @@ public class ArtistServiceImplementation implements ArtistService
     private String backendUrl;
 
     @Override
-    public Artist addArtist(Artist user) throws Exception
-    {
-        if(user!=null)
-        {
-            return artistRepository.save(user);
-        }
-        throw new Exception("User is null");
-    }
-
-    @Override
-    public List<Artist> getRegisteredArtists() throws Exception
-    {
-        List<Artist> artists = artistRepository.findAll();
-        if(!artists.isEmpty())
-        {
-            return artists;
-        }
-        throw new Exception("No artists found");
-    }
-
-    @Override
-    public Artist getArtistByName(String artistName) throws Exception
-    {
-        Artist artist = artistRepository.findByArtistName(artistName);
-        if (artist != null)
-        {
-            return artist;
-        }
-        throw new Exception("Artist not found");
-    }
-
-    @Override
     public String fetchArtistSummary(String artistName) throws JsonProcessingException {
         Artist artist = artistRepository.findByArtistName(artistName);
 
@@ -76,7 +44,6 @@ public class ArtistServiceImplementation implements ArtistService
             {
                 updateSummaryAndDate(artistName, artist, currentDate);
             }
-
         }
         return artist.getSummary();
     }
@@ -88,12 +55,14 @@ public class ArtistServiceImplementation implements ArtistService
         artistRepository.save(artist);
     }
 
-    private String getSummaryFromMicroservice(String artistName) throws JsonProcessingException {
+    // Package-private for testing
+    String getSummaryFromMicroservice(String artistName) throws JsonProcessingException {
         String encodedArtistName = URLEncoder.encode(artistName, StandardCharsets.UTF_8);
         // Construct the URL for the microservice
         String baseUrl = backendUrl + "/api/spotify/data/artist-summary";
         String url = baseUrl + "?artistName=" + encodedArtistName;
-        RestTemplate restTemplate = new RestTemplate();
+
+        RestTemplate restTemplate = createRestTemplate();
         System.out.println("Requesting summary from: " + url);
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
 
@@ -110,12 +79,8 @@ public class ArtistServiceImplementation implements ArtistService
         }
     }
 
-    //main function for testing
-    public static void main(String[] args) throws UnsupportedEncodingException, JsonProcessingException {
-        String artistName = "The Beatles";
-        ArtistServiceImplementation artistService = new ArtistServiceImplementation();
-        System.out.println(artistService.getSummaryFromMicroservice(artistName));
-
+    // Added for testability
+    RestTemplate createRestTemplate() {
+        return new RestTemplate();
     }
-
 }

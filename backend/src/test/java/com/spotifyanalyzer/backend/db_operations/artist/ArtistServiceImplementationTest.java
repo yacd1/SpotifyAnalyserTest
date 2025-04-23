@@ -2,18 +2,27 @@ package com.spotifyanalyzer.backend.db_operations.artist;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class ArtistServiceImplementationTest {
+@ExtendWith(MockitoExtension.class)
+public class ArtistServiceImplementationTest {
 
     @Mock
     private ArtistRepository artistRepository;
@@ -21,102 +30,137 @@ class ArtistServiceImplementationTest {
     @InjectMocks
     private ArtistServiceImplementation artistService;
 
+    private final String ARTIST_NAME = "Test Artist";
+    private final String SUMMARY = "Test artist summary";
+    private final String BACKEND_URL = "http://localhost:8080";
+
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        ReflectionTestUtils.setField(artistService, "backendUrl", BACKEND_URL);
     }
 
     @Test
-    void testAddArtist_ValidArtist() throws Exception {
-        Artist artist = new Artist("Test Summary", "Test Artist", new Date());
-        when(artistRepository.save(artist)).thenReturn(artist);
+    void testFetchArtistSummary_ArtistNotInDatabase() throws JsonProcessingException {
+        ArtistServiceImplementation spy = spy(artistService);
 
-        Artist result = artistService.addArtist(artist);
+        when(artistRepository.findByArtistName(ARTIST_NAME)).thenReturn(null);
 
-        assertNotNull(result);
-        assertEquals(artist, result);
-        verify(artistRepository, times(1)).save(artist);
+        // Mock the summary retrieval
+        doReturn(SUMMARY).when(spy).getSummaryFromMicroservice(ARTIST_NAME);
+
+        String result = spy.fetchArtistSummary(ARTIST_NAME);
+
+        assertEquals(SUMMARY, result);
+
+        ArgumentCaptor<Artist> artistCaptor = ArgumentCaptor.forClass(Artist.class);
+        verify(artistRepository).save(artistCaptor.capture());
+
+        Artist savedArtist = artistCaptor.getValue();
+        assertEquals(ARTIST_NAME, savedArtist.getArtistName());
+        assertEquals(SUMMARY, savedArtist.getSummary());
+        assertNotNull(savedArtist.getUpdate_date());
     }
 
     @Test
-    void testAddArtist_NullArtist() {
-        Exception exception = assertThrows(Exception.class, () -> artistService.addArtist(null));
-        assertEquals("User is null", exception.getMessage());
-        verify(artistRepository, never()).save(any());
+    void testFetchArtistSummary_ArtistInDatabaseButOutdated() throws JsonProcessingException {
+        ArtistServiceImplementation spy = spy(artistService);
+
+        // Setup artist in database with old date
+        Artist existingArtist = new Artist();
+        existingArtist.setArtistName(ARTIST_NAME);
+        existingArtist.setSummary("Old summary");
+
+        // Set update date to more than 30 days ago
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_MONTH, -33);
+        Date oldDate = calendar.getTime();
+        existingArtist.setUpdate_date(oldDate);
+
+        when(artistRepository.findByArtistName(ARTIST_NAME)).thenReturn(existingArtist);
+
+        doReturn(SUMMARY).when(spy).getSummaryFromMicroservice(ARTIST_NAME);
+
+        String result = spy.fetchArtistSummary(ARTIST_NAME);
+
+        assertEquals(SUMMARY, result);
+
+        // Verify the existing Artist was updated and saved
+        verify(artistRepository).save(existingArtist);
+        assertEquals(SUMMARY, existingArtist.getSummary());
+        assertTrue(existingArtist.getUpdate_date().after(oldDate));
     }
 
     @Test
-    void testGetRegisteredArtists_ValidArtists() throws Exception {
-        List<Artist> artists = Arrays.asList(
-                new Artist("Summary1", "Artist1", new Date()),
-                new Artist("Summary2", "Artist2", new Date())
-        );
-        when(artistRepository.findAll()).thenReturn(artists);
+    void testFetchArtistSummary_ArtistInDatabaseAndUpToDate() throws JsonProcessingException {
 
-        List<Artist> result = artistService.getRegisteredArtists();
+        ArtistServiceImplementation spy = spy(artistService);
 
-        assertNotNull(result);
-        assertEquals(artists, result);
-        verify(artistRepository, times(1)).findAll();
+        Artist existingArtist = new Artist();
+        existingArtist.setArtistName(ARTIST_NAME);
+        existingArtist.setSummary(SUMMARY);
+
+        // Set update date to less than 30 days ago
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_MONTH, -15);
+        Date recentDate = calendar.getTime();
+        existingArtist.setUpdate_date(recentDate);
+
+        when(artistRepository.findByArtistName(ARTIST_NAME)).thenReturn(existingArtist);
+
+        String result = spy.fetchArtistSummary(ARTIST_NAME);
+
+        assertEquals(SUMMARY, result);
+
+        // Verify that the microservice was not called
+        verify(spy, never()).getSummaryFromMicroservice(anyString());
+
+        // Verify the repository save was not called
+        verify(artistRepository, never()).save(any(Artist.class));
     }
 
     @Test
-    void testGetRegisteredArtists_NoArtistsFound() {
-        when(artistRepository.findAll()).thenReturn(Arrays.asList());
+    void testGetSummaryFromMicroservice() throws Exception {
 
-        Exception exception = assertThrows(Exception.class, () -> artistService.getRegisteredArtists());
-        assertEquals("No artists found", exception.getMessage());
-        verify(artistRepository, times(1)).findAll();
-    }
+        RestTemplate mockRestTemplate = mock(RestTemplate.class);
 
-//    @Test
-//    void testUpdateArtistSummary_ValidArtist() throws Exception {
-//        String artistName = "Test Artist";
-//        String summary = "Updated Summary";
-//        Artist artist = new Artist("Old Summary", artistName, new Date());
-//        when(artistRepository.findByArtistName(artistName)).thenReturn(artist);
-//        when(artistRepository.save(artist)).thenReturn(artist);
-//
-//        Artist result = artistService.fetchArtistSummary(artistName, summary);
-//
-//        assertNotNull(result);
-//        assertEquals(summary, result.getSummary());
-//        verify(artistRepository, times(1)).findByArtistName(artistName);
-//        verify(artistRepository, times(1)).save(artist);
-//    }
+        TestableArtistService testService = new TestableArtistService(mockRestTemplate);
+        ReflectionTestUtils.setField(testService, "backendUrl", BACKEND_URL);
+        ReflectionTestUtils.setField(testService, "artistRepository", artistRepository);
 
-//    @Test
-//    void testUpdateArtistSummary_ArtistNotFound() {
-//        String artistName = "Nonexistent Artist";
-//        String summary = "Updated Summary";
-//        when(artistRepository.findByArtistName(artistName)).thenReturn(null);
-//
-//        Exception exception = assertThrows(Exception.class, () -> artistService.fetchArtistSummary(artistName, summary));
-//        assertEquals("Artist not found", exception.getMessage());
-//        verify(artistRepository, times(1)).findByArtistName(artistName);
-//        verify(artistRepository, never()).save(any());
-//    }
+        // Create mock response
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode rootNode = mapper.createObjectNode();
+        rootNode.put("artist_summary", SUMMARY);
+        String jsonResponse = mapper.writeValueAsString(rootNode);
 
-    @Test
-    void testGetArtistByName_ValidArtist() throws Exception {
-        String artistName = "Test Artist";
-        Artist artist = new Artist("Test Summary", artistName, new Date());
-        when(artistRepository.findByArtistName(artistName)).thenReturn(artist);
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(jsonResponse, HttpStatus.OK);
+        when(mockRestTemplate.getForEntity(contains("/api/spotify/data/artist-summary"), eq(String.class)))
+                .thenReturn(responseEntity);
 
-        Artist result = artistService.getArtistByName(artistName);
+        String result = testService.getSummaryFromMicroservice(ARTIST_NAME);
 
-        assertNotNull(result);
-        assertEquals(artist, result);
-        verify(artistRepository, times(1)).findByArtistName(artistName);
+        // Verify
+        assertEquals(SUMMARY, result);
     }
 
     @Test
-    void testGetArtistByName_ArtistNotFound() {
-        String artistName = "Nonexistent Artist";
-        when(artistRepository.findByArtistName(artistName)).thenReturn(null);
+    void testGetSummaryFromMicroservice_NonSuccessResponse() throws Exception {
 
-        Exception exception = assertThrows(Exception.class, () -> artistService.getArtistByName(artistName));
-        assertEquals("Artist not found", exception.getMessage());
-        verify(artistRepository, times(1)).findByArtistName(artistName);
+        RestTemplate mockRestTemplate = mock(RestTemplate.class);
+
+        TestableArtistService testService = new TestableArtistService(mockRestTemplate);
+        ReflectionTestUtils.setField(testService, "backendUrl", BACKEND_URL);
+        ReflectionTestUtils.setField(testService, "artistRepository", artistRepository);
+
+        // Mock non-success REST response
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        when(mockRestTemplate.getForEntity(anyString(), eq(String.class)))
+                .thenReturn(responseEntity);
+
+        // Test the method directly
+        String result = testService.getSummaryFromMicroservice(ARTIST_NAME);
+
+        // Verify
+        assertEquals("No summary found", result);
     }
 }

@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python and Install Dependencies
+        working-directory: py-microservice
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install pytest
+
+      - name: Run Python Tests
+        working-directory: py-microservice
+        run: |
+          source venv/bin/activate
+          pytest tests  # or just `pytest` if your tests are at the root
+
+      - name: Syntax & Import Check
+        working-directory: py-microservice
+        run: |
+          find . -name "*.py" -exec python -m py_compile {} \;
+          python -c "import main"

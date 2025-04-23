@@ -107,18 +107,6 @@ function Artists() {
         }
     };
 
-    const handleLogout = async () => {
-        try {
-            await apiService.logoutFromSpotify();
-            sessionStorage.removeItem('spotify_access_token');
-            setAccessToken(null);
-            navigate('/login');
-        } catch (err) {
-            sessionStorage.removeItem('spotify_access_token');
-            navigate('/login');
-        }
-    };
-
     const handleTimeRangeChange = (e) => {
         setTimeRange(e.target.value);
     };
@@ -152,7 +140,6 @@ function Artists() {
         <div className={`artist-page-home-container ${isDarkMode ? 'dark' : 'light'}`}>
             <div className="header">
                 <h1>Overview of Your Favourite Artists</h1>
-                <button onClick={handleLogout} className="logout-button">Logout</button>
             </div>
 
             {error && <div className="error-alert">{error}</div>}

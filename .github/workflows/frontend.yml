@@ -1,4 +1,4 @@
-name: FRONTEND Build and Test
+name: FRONTEND - Build and Test
 
 on:
   push:

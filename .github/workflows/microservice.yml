@@ -1,4 +1,4 @@
-name: CI
+name: MICROSERVICE - Run tests
 
 on:
   push:
@@ -22,11 +22,11 @@ jobs:
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install pytest
 
-      - name: Run Python Tests
+      - name: Run tests
         working-directory: py-microservice
         run: |
           source venv/bin/activate
-          pytest tests  # or just `pytest` if your tests are at the root
+          python -m unittest discover
 
       - name: Syntax & Import Check
         working-directory: py-microservice

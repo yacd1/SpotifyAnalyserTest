@@ -20,7 +20,6 @@ jobs:
           source venv/bin/activate
           pip install -r requirements.txt
           pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install pytest
 
       - name: Run tests
         working-directory: py-microservice

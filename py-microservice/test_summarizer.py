@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 from summarizer import get_genius_data, summarize_artist, generate_summary
 
-class TestSummarizer(unittest.TestCase):
+class test_summarizer(unittest.TestCase):
 
     @patch('summarizer.requests.get')
     def test_get_genius_data_success(self, mock_get):

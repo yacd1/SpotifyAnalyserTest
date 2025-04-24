@@ -1,0 +1,28 @@
+name: JAVA - Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+          
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4.7.0
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+    
+      - name: Run Tests
+        working-directory: backend
+        run: mvn test
+
+      - name: Build Application
+        working-directory: backend
+        run: mvn clean install

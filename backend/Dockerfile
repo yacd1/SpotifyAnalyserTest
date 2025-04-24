@@ -12,6 +12,6 @@ WORKDIR /app
 
 COPY --from=build /app/target/backend-0.0.1-SNAPSHOT.jar backend.jar
 
-EXPOSE ${server.port}
+EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "backend.jar"]

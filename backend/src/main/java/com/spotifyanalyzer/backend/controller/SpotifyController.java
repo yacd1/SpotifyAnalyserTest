@@ -450,9 +450,6 @@ public class SpotifyController {
                     .body(Map.of("error", "failed to fetch artist summary",
                             "message", e.getMessage()));
         }
-
-
-
     }
 
     @PostMapping("/logout")

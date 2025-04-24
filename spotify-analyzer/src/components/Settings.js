@@ -21,32 +21,32 @@ function Settings() {
 
                     try {
                         const artistScoreResponse = await apiService.getUserArtistMinigameTimeById(status.profile.id);
-                        console.log("artist score:", artistScoreResponse);
+                        console.log("Artist score:", artistScoreResponse);
                         if (artistScoreResponse.artistMinigameTime !== false) {
                             setArtistGameHighScore(artistScoreResponse.artistMinigameTime);
                         }
                         else {
-                            console.log("no artist score found");
+                            console.log("No artist score found");
                             setArtistGameHighScore(null);
                         }
 
                         const trackScoreResponse = await apiService.getUserTrackMinigameTimeById(status.profile.id);
                         if (trackScoreResponse.trackMinigameTime !== false) {
                             setTrackGameHighScore(trackScoreResponse.trackMinigameTime);
-                            console.log("track score:", trackScoreResponse);
+                            console.log("Track score:", trackScoreResponse);
                         }
                         else {
-                            console.log("no track score found");
+                            console.log("No track score found");
                             setTrackGameHighScore(null);
                         }
                     } catch (error) {
-                        console.log("no high scores found for user");
+                        console.log("No high scores found for user");
                         setArtistGameHighScore(null);
                         setTrackGameHighScore(null);
                     }
                 }
             } catch (error) {
-                console.error("error fetching user profile:", error);
+                console.error("Error fetching user profile:", error);
             }
         };
 
@@ -76,7 +76,7 @@ function Settings() {
                 setTrackGameHighScore(null);
             }
         } catch (error) {
-            console.error("error removing high score:", error);
+            console.error("Error removing high score:", error);
             setMessage('Error removing high score. Please try again later.');
         } finally {
             setLoading(false);

@@ -22,14 +22,14 @@ beforeEach(() => {
     apiService.checkSpotifyStatus.mockResolvedValue({
         authenticated: false,
     });
-    apiService.getUserArtistMinigameTime.mockResolvedValue({ artistMinigameTime: 100 });
-    apiService.getUserTrackMinigameTime.mockResolvedValue({ trackMinigameTime: 200 });
+    apiService.getUserArtistMinigameTimeById.mockResolvedValue({ artistMinigameTime: 100 });
+    apiService.getUserTrackMinigameTimeById.mockResolvedValue({ trackMinigameTime: 200 });
     apiService.getTopMinigamePlayers.mockResolvedValue([
-      { spotifyUsername: 'u1', minigameBestTimeInSeconds: 10 }
+        { spotifyUsername: 'u1', minigameBestTimeInSeconds: 10 }
     ]);
-    apiService.deleteArtistMinigameScore.mockResolvedValue({ success: true });
-    apiService.deleteTrackMinigameScore.mockResolvedValue({ success: true });
-    apiService.deleteBothMinigameScores.mockResolvedValue({ success: true });
+    apiService.deleteArtistMinigameScoreById.mockResolvedValue({ success: true });
+    apiService.deleteTrackMinigameScoreById.mockResolvedValue({ success: true });
+    apiService.deleteBothMinigameScoresById.mockResolvedValue({ success: true });
 });
 
 describe('Settings Component', () => {
@@ -49,7 +49,7 @@ describe('Settings Component', () => {
         );
 
         const darkModeSwitch = screen.getByRole('checkbox');
-        
+
         expect(darkModeSwitch).not.toBeChecked();
 
         await act(async () => {
@@ -66,13 +66,13 @@ describe('Settings Component', () => {
     });
 
     it('displays user profile and high scores when logged in', async () => {
-        const mockProfile = { display_name: 'Test User' };
+        const mockProfile = { display_name: 'Test User', id: 'test-user-id' };
         const mockArtistHighScore = 100;
         const mockTrackHighScore = 200;
 
         apiService.checkSpotifyStatus.mockResolvedValue({ authenticated: true, profile: mockProfile });
-        apiService.getUserArtistMinigameTime.mockResolvedValue({ artistMinigameTime: mockArtistHighScore });
-        apiService.getUserTrackMinigameTime.mockResolvedValue({ trackMinigameTime: mockTrackHighScore });
+        apiService.getUserArtistMinigameTimeById.mockResolvedValue({ artistMinigameTime: mockArtistHighScore });
+        apiService.getUserTrackMinigameTimeById.mockResolvedValue({ trackMinigameTime: mockTrackHighScore });
 
         render(
             <ThemeProvider>
@@ -100,12 +100,12 @@ describe('Settings Component', () => {
     });
 
     it('handles artist score deletion process', async () => {
-        const mockProfile = { display_name: 'Test User' };
+        const mockProfile = { display_name: 'Test User', id: 'test-user-id' };
         const mockArtistHighScore = 100;
 
         apiService.checkSpotifyStatus.mockResolvedValue({ authenticated: true, profile: mockProfile });
-        apiService.getUserArtistMinigameTime.mockResolvedValue({ artistMinigameTime: mockArtistHighScore });
-        apiService.deleteArtistMinigameScore.mockResolvedValue({ success: true });
+        apiService.getUserArtistMinigameTimeById.mockResolvedValue({ artistMinigameTime: mockArtistHighScore });
+        apiService.deleteArtistMinigameScoreById.mockResolvedValue({ success: true });
 
         render(
             <ThemeProvider>
@@ -121,17 +121,17 @@ describe('Settings Component', () => {
             userEvent.click(deleteButton);
         });
 
-        expect(apiService.deleteArtistMinigameScore).toHaveBeenCalledWith(mockProfile.display_name);
+        expect(apiService.deleteArtistMinigameScoreById).toHaveBeenCalledWith(mockProfile.id);
         expect(screen.getByText(/Artist game high score deleted successfully!/)).toBeInTheDocument();
     });
 
     it('handles track score deletion process', async () => {
-        const mockProfile = { display_name: 'Test User' };
+        const mockProfile = { display_name: 'Test User', id: 'test-user-id' };
         const mockTrackHighScore = 200;
 
         apiService.checkSpotifyStatus.mockResolvedValue({ authenticated: true, profile: mockProfile });
-        apiService.getUserTrackMinigameTime.mockResolvedValue({ trackMinigameTime: mockTrackHighScore });
-        apiService.deleteTrackMinigameScore.mockResolvedValue({ success: true });
+        apiService.getUserTrackMinigameTimeById.mockResolvedValue({ trackMinigameTime: mockTrackHighScore });
+        apiService.deleteTrackMinigameScoreById.mockResolvedValue({ success: true });
 
         render(
             <ThemeProvider>
@@ -147,19 +147,19 @@ describe('Settings Component', () => {
             userEvent.click(deleteButton);
         });
 
-        expect(apiService.deleteTrackMinigameScore).toHaveBeenCalledWith(mockProfile.display_name);
+        expect(apiService.deleteTrackMinigameScoreById).toHaveBeenCalledWith(mockProfile.id);
         expect(screen.getByText(/Track game high score deleted successfully!/)).toBeInTheDocument();
     });
 
     it('handles both artist and track score deletion process', async () => {
-        const mockProfile = { display_name: 'Test User' };
+        const mockProfile = { display_name: 'Test User', id: 'test-user-id' };
         const mockArtistHighScore = 100;
         const mockTrackHighScore = 200;
 
         apiService.checkSpotifyStatus.mockResolvedValue({ authenticated: true, profile: mockProfile });
-        apiService.getUserArtistMinigameTime.mockResolvedValue({ artistMinigameTime: mockArtistHighScore });
-        apiService.getUserTrackMinigameTime.mockResolvedValue({ trackMinigameTime: mockTrackHighScore });
-        apiService.deleteBothMinigameScores.mockResolvedValue({ success: true });
+        apiService.getUserArtistMinigameTimeById.mockResolvedValue({ artistMinigameTime: mockArtistHighScore });
+        apiService.getUserTrackMinigameTimeById.mockResolvedValue({ trackMinigameTime: mockTrackHighScore });
+        apiService.deleteBothMinigameScoresById.mockResolvedValue({ success: true });
 
         render(
             <ThemeProvider>
@@ -175,7 +175,7 @@ describe('Settings Component', () => {
             userEvent.click(deleteButton);
         });
 
-        expect(apiService.deleteBothMinigameScores).toHaveBeenCalledWith(mockProfile.display_name);
+        expect(apiService.deleteBothMinigameScoresById).toHaveBeenCalledWith(mockProfile.id);
         expect(screen.getByText(/All high scores deleted successfully!/)).toBeInTheDocument();
     });
 });

@@ -151,7 +151,7 @@ public class SpotifyService {
     }
 
     /**
-     * create base64 (based64) http headers for the client credentials (see spotify dev documentation link above)
+     * create base64 http headers for the client credentials (see spotify dev documentation link above)
      */
     private HttpHeaders createBasicAuthHeaders() {
         String credentials = spotifyConfig.getClientId() + ":" + spotifyConfig.getClientSecret();

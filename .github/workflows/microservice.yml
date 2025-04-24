@@ -1,0 +1,28 @@
+name: MICROSERVICE - Run tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python and Install Dependencies
+        working-directory: py-microservice
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Run tests
+        working-directory: py-microservice
+        run: |
+          source venv/bin/activate
+          python -m unittest discover

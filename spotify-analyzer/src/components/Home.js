@@ -23,6 +23,7 @@ const Home = () => {
     const [showingArtists, setShowingArtists] = useState(true);
     const [artistGameHighScore, setArtistGameHighScore] = useState(null);
     const [trackGameHighScore, setTrackGameHighScore] = useState(null);
+    const [userProfile, setUserProfile] = useState(null);
 
     const toggleHighScore = () => {
         setShowingArtists(!showingArtists);
@@ -58,9 +59,8 @@ const Home = () => {
 
     const fetchArtistGameHighScore = async () => {
         try {
-            const status = await apiService.checkSpotifyStatus();
-            if (status.authenticated && status.profile) {
-                const artistScoreResponse = await apiService.getUserArtistMinigameTime(status.profile.display_name);
+            if (userProfile && userProfile.id) {
+                const artistScoreResponse = await apiService.getUserArtistMinigameTimeById(userProfile.id);
                 console.log("Artist score:", artistScoreResponse);
                 if (artistScoreResponse.artistMinigameTime !== false) {
                     setArtistGameHighScore(artistScoreResponse.artistMinigameTime);
@@ -76,9 +76,8 @@ const Home = () => {
 
     const fetchTrackGameHighScore = async () => {
         try {
-            const status = await apiService.checkSpotifyStatus();
-            if (status.authenticated && status.profile) {
-                const trackScoreResponse = await apiService.getUserTrackMinigameTime(status.profile.display_name);
+            if (userProfile && userProfile.id) {
+                const trackScoreResponse = await apiService.getUserTrackMinigameTimeById(userProfile.id);
                 if (trackScoreResponse.trackMinigameTime !== false) {
                     setTrackGameHighScore(trackScoreResponse.trackMinigameTime);
                 } else {
@@ -126,19 +125,35 @@ const Home = () => {
         }
     };
 
+    const fetchUserProfile = async () => {
+        try {
+            const status = await apiService.checkSpotifyStatus();
+            if (status.authenticated && status.profile) {
+                setUserProfile(status.profile);
+                return status.profile;
+            }
+            return null;
+        } catch (error) {
+            console.error("Error fetching user profile:", error);
+            return null;
+        }
+    };
+
     const addUserToDatabase = async () => {
+        try {
             const fetchedUsers = await apiService.getAllUsers();
             setUsers(fetchedUsers);
-            console.log("Users:", fetchedUsers);
+
             const status = await apiService.checkSpotifyStatus();
-            console.log("Status:", status);
-
-
-            await apiService.registerUser(status.profile.display_name);
-
+            if (status.authenticated && status.profile) {
+                console.log("User profile:", status.profile);
+                await apiService.registerUser(status.profile.display_name, status.profile.id);
+            }
+        } catch (error) {
+            console.error("Error adding user to database:", error);
+        }
     }
 
-    // check authentication (mounting on to Home component)
     useEffect(() => {
         if (!accessToken) {
             // redirect if not authenticated
@@ -146,30 +161,39 @@ const Home = () => {
             navigate('/login');
             return;
         }
+
+        // these can run without userProfile
         fetchTopArtists();
         fetchRecentlyPlayed();
         fetchReccomendations();
         fetchTopGenre();
         fetchTopSongs();
         addUserToDatabase();
-        fetchArtistGameHighScore();
-        fetchTrackGameHighScore();
     }, [accessToken, navigate]);
 
-    // whenever the time period changes we need to refresh - this does that with timeRange as a param
+// this useEffect will run after userProfile is set
+    useEffect(() => {
+        if (userProfile && userProfile.id) {
+            fetchArtistGameHighScore();
+            fetchTrackGameHighScore();
+        }
+    }, [userProfile]);
+
+// whenever the time period changes we need to refresh
     useEffect(() => {
         if (accessToken) {
             fetchTopArtists();
             fetchRecentlyPlayed();
             fetchReccomendations();
             fetchTopSongs();
-            fetchArtistGameHighScore();
-            fetchTrackGameHighScore();
+
+            // only fetch scores if userProfile exists
+            if (userProfile && userProfile.id) {
+                fetchArtistGameHighScore();
+                fetchTrackGameHighScore();
+            }
         }
-    }, [timeRange]);
-
-
-
+    }, [timeRange, userProfile]);
 
     const handleTimeRangeChange = (e) => {
         setTimeRange(e.target.value);
@@ -178,9 +202,6 @@ const Home = () => {
     if (loading) {
         return <div className="loading-container">Loading your Spotify data...</div>;
     }
-
-
-
 
     return (
         <div className={`home-container ${isDarkMode ? 'dark' : 'light'}`}>

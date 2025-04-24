@@ -38,24 +38,24 @@ function Minigames() {
             try {
                 const status = await apiService.checkSpotifyStatus();
 
-                const artistTimeData = await apiService.getUserArtistMinigameTime(status.profile.display_name);
-                if (artistTimeData?.artistMinigameTime !== undefined) {
-                    setArtistBestTime(artistTimeData.artistMinigameTime);
-                } else {
-                    setArtistBestTime(false);
+                if (status.authenticated && status.profile) {
+                    const artistTimeData = await apiService.getUserArtistMinigameTimeById(status.profile.id);
+                    if (artistTimeData?.artistMinigameTime !== undefined) {
+                        setArtistBestTime(artistTimeData.artistMinigameTime);
+                    } else {
+                        setArtistBestTime(false);
+                    }
+
+                    const trackTimeData = await apiService.getUserTrackMinigameTimeById(status.profile.id);
+                    if (trackTimeData?.trackMinigameTime !== undefined) {
+                        setTrackBestTime(trackTimeData.trackMinigameTime);
+                    } else {
+                        setTrackBestTime(false);
+                    }
+
+                    const leaderboard = await apiService.getTopMinigamePlayers();
+                    setTopPlayers(leaderboard);
                 }
-
-                const trackTimeData = await apiService.getUserTrackMinigameTime(status.profile.display_name);
-                if (trackTimeData?.trackMinigameTime !== undefined) {
-                    setTrackBestTime(trackTimeData.trackMinigameTime);
-                } else {
-                    setTrackBestTime(false);
-                }
-
-
-                const leaderboard = await apiService.getTopMinigamePlayers();
-                setTopPlayers(leaderboard);
-
             } catch (err) {
                 console.error("Init error:", err);
             }
@@ -119,12 +119,15 @@ function Minigames() {
             setTimerActive(false);
             setGameComplete(true);
             localStorage.setItem('gameCompleted', 'true');
-            saveHighScore(mode);
+            
+            if (userProfile && userProfile.id) {
+                saveHighScore(mode);
+            }
         }
-    }, [artists, tracks, mode, timerActive]);
+    }, [artists, tracks, mode, timerActive, userProfile]);
 
     const saveHighScore = async (gameType) => {
-        if (!userProfile?.display_name) {
+        if (!userProfile || !userProfile.id) {
             setScoreMessage("Login to save your score!");
             return;
         }
@@ -132,28 +135,28 @@ function Minigames() {
         try {
             let response;
             if (gameType === "artists") {
-                response = await apiService.updateArtistMinigameTime(userProfile.display_name, elapsedTime);
+                response = await apiService.updateArtistMinigameTimeById(userProfile.id, elapsedTime);
                 if (response.updated) {
                     setScoreMessage(`New high score: ${elapsedTime}s!`);
                     setArtistBestTime(elapsedTime);
                 } else {
-                    const time = await apiService.getUserArtistMinigameTime(userProfile.display_name);
+                    const time = await apiService.getUserArtistMinigameTimeById(userProfile.id);
                     setArtistBestTime(time?.artistMinigameTime ?? false);
-                    setScoreMessage(`Your best artist score: ${time}s`);
+                    setScoreMessage(`Your best artist score: ${time?.artistMinigameTime}s`);
                 }
             } else {
-                response = await apiService.updateTrackMinigameTime(userProfile.display_name, elapsedTime);
+                response = await apiService.updateTrackMinigameTimeById(userProfile.id, elapsedTime);
                 if (response.updated) {
                     setScoreMessage(`New high score: ${elapsedTime}s!`);
                     setTrackBestTime(elapsedTime);
                 } else {
-                    const time = await apiService.getUserTrackMinigameTime(userProfile.display_name);
+                    const time = await apiService.getUserTrackMinigameTimeById(userProfile.id);
                     setTrackBestTime(time?.trackMinigameTime ?? false);
-                    setScoreMessage(`Your best track score: ${time}s`);
+                    setScoreMessage(`Your best track score: ${time?.trackMinigameTime}s`);
                 }
             }
         } catch (error) {
-            console.error("Error saving high score:", error);
+            console.error("error saving high score:", error);
             setScoreMessage("Error saving your score. Try again later.");
         }
     };

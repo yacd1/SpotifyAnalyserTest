@@ -29,13 +29,18 @@ const mockMatchMedia = () => ({
 
 beforeEach(() => {
   apiService.checkSpotifyStatus.mockResolvedValue({
+    authenticated: true,
     profile: { display_name: 'Mock User', id: 'mock_user_id' },
     artistBestTime: 42,
     trackBestTime: 99,
     topPlayers: [{ spotifyUsername: 'u1', minigameBestTimeInSeconds: 10 }],
   });
-  apiService.getUserArtistMinigameTime.mockResolvedValue({ artistMinigameTime: 100 });
-  apiService.getUserTrackMinigameTime.mockResolvedValue({ trackMinigameTime: 200 });
+
+  apiService.getUserArtistMinigameTimeById.mockResolvedValue({ artistMinigameTime: 100 });
+  apiService.getUserTrackMinigameTimeById.mockResolvedValue({ trackMinigameTime: 200 });
+  apiService.updateArtistMinigameTimeById.mockResolvedValue({ updated: true });
+  apiService.updateTrackMinigameTimeById.mockResolvedValue({ updated: true });
+
   apiService.getTopMinigamePlayers.mockResolvedValue([
     { spotifyUsername: 'u1', minigameBestTimeInSeconds: 10 }
   ]);
@@ -57,9 +62,9 @@ describe('Minigames Component', () => {
 
   it('renders with artist mode initially', async () => {
     render(
-      <ThemeProvider>
-        <Minigames />
-      </ThemeProvider>
+        <ThemeProvider>
+          <Minigames />
+        </ThemeProvider>
     );
     await waitFor(() => {
       expect(screen.getByText(/Guess Artists Rankings/i)).toBeInTheDocument();
@@ -69,9 +74,9 @@ describe('Minigames Component', () => {
 
   it('toggles mode between artists and tracks', async () => {
     render(
-      <ThemeProvider>
-        <Minigames />
-      </ThemeProvider>
+        <ThemeProvider>
+          <Minigames />
+        </ThemeProvider>
     );
     await waitFor(() => screen.getByText(/Guess Artists Rankings/i));
     fireEvent.click(screen.getByRole('button', { name: /Tracks/i }));
@@ -83,9 +88,9 @@ describe('Minigames Component', () => {
 
   it('starts timer when first guess is made', async () => {
     render(
-      <ThemeProvider>
-        <Minigames />
-      </ThemeProvider>
+        <ThemeProvider>
+          <Minigames />
+        </ThemeProvider>
     );
     await waitFor(() => screen.getByPlaceholderText(/Enter artist name/i));
     fireEvent.change(screen.getByPlaceholderText(/Enter artist name/i), {
@@ -95,5 +100,5 @@ describe('Minigames Component', () => {
     await waitFor(() => {
       expect(screen.getByText(/Time: \d+s/)).toBeInTheDocument();
     });
-  });  
+  });
 });

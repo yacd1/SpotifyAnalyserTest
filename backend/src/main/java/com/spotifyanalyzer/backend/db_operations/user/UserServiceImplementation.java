@@ -15,15 +15,20 @@ public class UserServiceImplementation implements UserService
 
     @Transactional
     @Synchronized
-    public void registerUser(String username){
-        // Check if the user already exists
-        User existingUser = getUserFromUsername(username);
+    public void registerUser(String username, String spotifyId){
+        // (ben) check if the user already exists by spotifyId (more reliable than username)
+        User existingUser = userRepository.findBySpotifyId(spotifyId);
         if (existingUser != null) {
-            // User already exists, no need to register again
+            // User already exists, update username if it changed
+            if (!existingUser.getSpotifyUsername().equals(username)) {
+                existingUser.setSpotifyUsername(username);
+                userRepository.save(existingUser);
+            }
             return;
         }
         User user = new User();
         user.setSpotifyUsername(username);
+        user.setSpotifyId(spotifyId);
         user.setArtistsMinigameBestTimeInSeconds(null);
         user.setTracksMinigameBestTimeInSeconds(null);
         userRepository.save(user);
@@ -52,21 +57,11 @@ public class UserServiceImplementation implements UserService
     }
 
     @Override
-    public boolean deleteBothMinigameScores(String username){
-        User user = getUserFromUsername(username);
+    public boolean updateMinigameTimeById(String spotifyId, long newTime, String typeOfGame) throws Exception {
+        User user = getUserFromSpotifyId(spotifyId);
         if (user == null) return false;
-        user.setArtistsMinigameBestTimeInSeconds(null);
-        user.setTracksMinigameBestTimeInSeconds(null);
-        userRepository.save(user);
-        return true;
-    }
 
-    @Override
-    public boolean updateMinigameTime(String username, long newTime, String typeOfGame){
-        User user = getUserFromUsername(username);
-        if (user == null) return false;
         if (typeOfGame.equals("artists")) {
-            // Check if the new time is better than the existing best time
             if (user.getArtistsMinigameBestTimeInSeconds() == null || newTime < user.getArtistsMinigameBestTimeInSeconds()) {
                 user.setArtistsMinigameBestTimeInSeconds(newTime);
                 userRepository.save(user);
@@ -83,23 +78,32 @@ public class UserServiceImplementation implements UserService
     }
 
     @Override
-    public Long getUserArtistMinigameTime(String username){
-        User user = getUserFromUsername(username);
-        if (user == null) return null;
-        return user.getArtistsMinigameBestTimeInSeconds();
-        
+    public boolean deleteBothMinigameScoresById(String spotifyId) throws Exception {
+        User user = getUserFromSpotifyId(spotifyId);
+        if (user == null) return false;
+        user.setArtistsMinigameBestTimeInSeconds(null);
+        user.setTracksMinigameBestTimeInSeconds(null);
+        userRepository.save(user);
+        return true;
     }
 
     @Override
-    public Long getUserTrackMinigameTime(String username){
-        User user = getUserFromUsername(username);
+    public Long getUserArtistMinigameTimeById(String spotifyId) throws Exception {
+        User user = getUserFromSpotifyId(spotifyId);
+        if (user == null) return null;
+        return user.getArtistsMinigameBestTimeInSeconds();
+    }
+
+    @Override
+    public Long getUserTrackMinigameTimeById(String spotifyId) throws Exception {
+        User user = getUserFromSpotifyId(spotifyId);
         if (user == null) return null;
         return user.getTracksMinigameBestTimeInSeconds();
     }
 
     @Override
-    public boolean deleteArtistMinigameScore(String username) {
-        User user = getUserFromUsername(username);
+    public boolean deleteArtistMinigameScoreById(String spotifyId) throws Exception {
+        User user = getUserFromSpotifyId(spotifyId);
         if (user == null) return false;
         user.setArtistsMinigameBestTimeInSeconds(null);
         userRepository.save(user);
@@ -107,20 +111,15 @@ public class UserServiceImplementation implements UserService
     }
 
     @Override
-    public boolean deleteTrackMinigameScore(String username) {
-        User user = getUserFromUsername(username);
+    public boolean deleteTrackMinigameScoreById(String spotifyId) throws Exception {
+        User user = getUserFromSpotifyId(spotifyId);
         if (user == null) return false;
         user.setTracksMinigameBestTimeInSeconds(null);
         userRepository.save(user);
         return true;
     }
 
-
-    private User getUserFromUsername(String username) {
-        List<User> users = userRepository.findAllBySpotifyUsername(username);
-        if (users.isEmpty()) {
-            return null;
-        }
-        return users.getFirst();
+    private User getUserFromSpotifyId(String spotifyId) {
+        return userRepository.findBySpotifyId(spotifyId);
     }
 }

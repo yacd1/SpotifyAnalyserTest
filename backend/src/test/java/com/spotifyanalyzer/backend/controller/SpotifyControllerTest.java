@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class SpotifyControllerBasicTests {
+class SpotifyControllerTest {
 
     @Mock
     private SpotifyService spotifyService;
@@ -169,7 +169,7 @@ class SpotifyControllerBasicTests {
     }
 
     @Test
-    void getFakeRecommendations_Success() throws Exception {
+    void getFakeRecommendations() throws Exception {
         // mock some recently played track for this test
         Map<String, Object> recentlyPlayedResponse = new HashMap<>();
         List<Map<String, Object>> recentItems = new ArrayList<>();
@@ -243,19 +243,6 @@ class SpotifyControllerBasicTests {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(artistResponse, response.getBody());
-    }
-
-    @Test
-    void getArtistSummary() throws Exception {
-        String artistName = "test artist";
-        String expectedSummary = "{\"summary\": \"Summary of test artist\"}";
-
-        when(pythonService.sendPOST(anyString(), anyString())).thenReturn(expectedSummary);
-
-        ResponseEntity<?> response = spotifyController.getArtistSummary(artistName);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(expectedSummary, response.getBody());
     }
 
     @Test

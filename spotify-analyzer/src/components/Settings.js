@@ -20,9 +20,9 @@ function Settings() {
                     setUserProfile(status.profile);
 
                     try {
-                        const artistScoreResponse = await apiService.getUserArtistMinigameTime(status.profile.display_name);
+                        const artistScoreResponse = await apiService.getUserArtistMinigameTimeById(status.profile.id);
+                        console.log("Artist score:", artistScoreResponse);
                         if (artistScoreResponse.artistMinigameTime !== false) {
-                            setArtistGameHighScore(artistScoreResponse.artistMinigameTime);
                             setArtistGameHighScore(artistScoreResponse.artistMinigameTime);
                         }
                         else {
@@ -30,9 +30,10 @@ function Settings() {
                             setArtistGameHighScore(null);
                         }
 
-                        const trackScoreResponse = await apiService.getUserTrackMinigameTime(status.profile.display_name);
+                        const trackScoreResponse = await apiService.getUserTrackMinigameTimeById(status.profile.id);
                         if (trackScoreResponse.trackMinigameTime !== false) {
                             setTrackGameHighScore(trackScoreResponse.trackMinigameTime);
+                            console.log("Track score:", trackScoreResponse);
                         }
                         else {
                             console.log("No track score found");
@@ -60,23 +61,19 @@ function Settings() {
 
         setLoading(true);
         try {
-            // Check if the user exists and has the relevant score
             if (scoreType === 'artist') {
-                    await apiService.deleteArtistMinigameScore(userProfile.display_name);
-                    setMessage('Artist game high score deleted successfully!');
-                    setArtistGameHighScore(null);
-
+                await apiService.deleteArtistMinigameScoreById(userProfile.id);
+                setMessage('Artist game high score deleted successfully!');
+                setArtistGameHighScore(null);
             } else if (scoreType === 'track') {
-
-                    await apiService.deleteTrackMinigameScore(userProfile.display_name);
-                    setMessage('Track game high score deleted successfully!');
-                    setTrackGameHighScore(null);
-
+                await apiService.deleteTrackMinigameScoreById(userProfile.id);
+                setMessage('Track game high score deleted successfully!');
+                setTrackGameHighScore(null);
             } else if (scoreType === 'all') {
-                    await apiService.deleteBothMinigameScores(userProfile.display_name);
-                    setMessage('All high scores deleted successfully!');
-                    setArtistGameHighScore(null);
-                    setTrackGameHighScore(null);
+                await apiService.deleteBothMinigameScoresById(userProfile.id);
+                setMessage('All high scores deleted successfully!');
+                setArtistGameHighScore(null);
+                setTrackGameHighScore(null);
             }
         } catch (error) {
             console.error("Error removing high score:", error);

@@ -7,11 +7,15 @@ module.exports = {
       trackBestTime: 99,
       topPlayers: [{ spotifyUsername: "u1", minigameBestTimeInSeconds: 10 }],
     }),
-    getUserArtistMinigameTime: jest.fn().mockResolvedValue({ artistMinigameTime: 100 }),
-    getUserTrackMinigameTime: jest.fn().mockResolvedValue({ trackMinigameTime: 200 }),
+    getUserArtistMinigameTimeById: jest.fn().mockResolvedValue({ artistMinigameTime: 100 }),
+    getUserTrackMinigameTimeById: jest.fn().mockResolvedValue({ trackMinigameTime: 200 }),
     getTopMinigamePlayers: jest.fn().mockResolvedValue([{ spotifyUsername: "u1", minigameBestTimeInSeconds: 10 }]),
-    deleteArtistMinigameScore: jest.fn(),
-    deleteTrackMinigameScore: jest.fn(),
-    deleteBothMinigameScores: jest.fn(),
+    deleteArtistMinigameScoreById: jest.fn(),
+    deleteTrackMinigameScoreById: jest.fn(),
+    deleteBothMinigameScoresById: jest.fn(),
+
+    registerUser: jest.fn(),
+    updateArtistMinigameTimeById: jest.fn().mockResolvedValue({ updated: true }),
+    updateTrackMinigameTimeById: jest.fn().mockResolvedValue({ updated: true }),
   }
 };

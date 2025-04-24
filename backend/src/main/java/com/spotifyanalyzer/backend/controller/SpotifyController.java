@@ -5,6 +5,7 @@ import com.spotifyanalyzer.backend.authservice.JsonUtil;
 import com.spotifyanalyzer.backend.authservice.PythonService;
 import com.spotifyanalyzer.backend.dto.SpotifyAuthResponse;
 import com.spotifyanalyzer.backend.authservice.SpotifyService;
+import com.spotifyanalyzer.backend.db_operations.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
@@ -31,9 +32,24 @@ public class SpotifyController {
     private String pythonServiceUrl;
 
     @Autowired
-    public SpotifyController(SpotifyService spotifyService) {
+    private UserService userService;
+
+    @Autowired
+    public SpotifyController(SpotifyService spotifyService, UserService userService) {
         this.spotifyService = spotifyService;
         this.pythonService = new PythonService();
+        this.userService = userService;
+    }
+
+    private void addUserToDatabase(Map<String, Object> profile) throws Exception {
+        if (profile != null) {
+            String username = (String) profile.get("display_name");
+            String spotifyId = (String) profile.get("id");
+
+            if (username != null && spotifyId != null) {
+                userService.registerUser(username, spotifyId);
+            }
+        }
     }
 
     private String getValidAccessToken(HttpSession session) {
@@ -94,6 +110,20 @@ public class SpotifyController {
 
             //System.out.println("Session ID: " + session.getId());
             System.out.println("Token stored in session");
+
+            // Get user profile and register in database
+            try {
+                String accessToken = authResponse.getAccessToken();
+                Map<String, Object> profile = spotifyService.getUserProfile(accessToken);
+                if (profile != null && profile.containsKey("id") && profile.containsKey("display_name")) {
+                    String username = (String) profile.get("display_name");
+                    String spotifyId = (String) profile.get("id");
+                    userService.registerUser(username, spotifyId);
+                }
+            } catch (Exception e) {
+                System.err.println("Error registering user: " + e.getMessage());
+                // Continue anyway, as this shouldn't block authentication
+            }
 
             // create response with token details
             Map<String, Object> response = new HashMap<>();

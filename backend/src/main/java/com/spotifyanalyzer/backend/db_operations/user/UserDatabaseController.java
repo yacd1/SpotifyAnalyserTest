@@ -16,14 +16,20 @@ public class UserDatabaseController
     @Autowired
     private UserService userService;
 
+    private static ResponseEntity<Map<String, Boolean>> getResponseMessage(boolean wasUpdated) {
+        return new ResponseEntity<>(
+                Map.of("updated", wasUpdated),
+                HttpStatus.OK
+        );
+    }
 
     //Registers the users
     @PutMapping("/register")
-    public ResponseEntity<?> register(@RequestParam String username) throws Exception
+    public ResponseEntity<?> register(@RequestParam String username, @RequestParam String spotifyId) throws Exception
     {
-        if(username!=null)
+        if(username!=null && spotifyId!=null)
         {
-            userService.registerUser(username);
+            userService.registerUser(username, spotifyId);
         }
         return ResponseEntity.ok(Collections.singletonMap("message", "User registered"));
     }
@@ -51,10 +57,10 @@ public class UserDatabaseController
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @GetMapping("/getUserArtistMinigameTime")
-    public ResponseEntity<?> getUserArtistMinigameTime(@RequestParam String username) {
+    @GetMapping("/getUserArtistMinigameTimeById")
+    public ResponseEntity<?> getUserArtistMinigameTimeById(@RequestParam String spotifyId) {
         try {
-            Long time = userService.getUserArtistMinigameTime(username);
+            Long time = userService.getUserArtistMinigameTimeById(spotifyId);
             if (time == null) {
                 return new ResponseEntity<>(
                         Map.of("artistMinigameTime", false),
@@ -62,89 +68,72 @@ public class UserDatabaseController
                 );
             }
             return new ResponseEntity<>(
-                        Map.of("artistMinigameTime", time),
-                        HttpStatus.OK
-                );
-        } catch (Exception e) {
-            return new ResponseEntity<>(
-                    Map.of("error", "Error: " + e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
-    @GetMapping("/getUserTrackMinigameTime")
-    public ResponseEntity<?> getUserTrackMinigameTime(@RequestParam String username) {
-        try {
-            Long time = userService.getUserTrackMinigameTime(username);
-            System.out.println("Time: " + time);
-                if (time == null) {
-                    return new ResponseEntity<>(
-                            Map.of("trackMinigameTime", false),
-                            HttpStatus.OK
-                    );
-                }
-
-                return new ResponseEntity<>(
-                        Map.of("trackMinigameTime", time),
-                        HttpStatus.OK
-                );
-
-        } catch (Exception e) {
-            return new ResponseEntity<>(
-                    Map.of("error", "Error: " + e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
-
-    //update user minigame time
-    @PutMapping("/updateArtistMinigameTime")
-    public ResponseEntity<?> updateArtistMinigameTime(@RequestParam String username, @RequestParam long newTime) {
-        try {
-            boolean wasUpdated = userService.updateMinigameTime(username, newTime, "artists");
-
-            return getResponseMessage(wasUpdated);
-        } catch (Exception e) {
-            return new ResponseEntity<>(
-                    Map.of("error", "Error: " + e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
-    @PutMapping("/updateTrackMinigameTime")
-    public ResponseEntity<?> updateTrackMinigameTime(@RequestParam String username, @RequestParam long newTime) {
-        try {
-            boolean wasUpdated = userService.updateMinigameTime(username, newTime, "tracks");
-
-            return getResponseMessage(wasUpdated);
-        } catch (Exception e) {
-            return new ResponseEntity<>(
-                    Map.of("error", "Error: " + e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
-    private static ResponseEntity<Map<String, Boolean>> getResponseMessage(boolean wasUpdated) {
-
-            return new ResponseEntity<>(
-                    Map.of("updated", wasUpdated),
+                    Map.of("artistMinigameTime", time),
                     HttpStatus.OK
-
             );
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    Map.of("error", "Error: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
-    @DeleteMapping("/deleteBothMinigameScores")
-    public ResponseEntity<?> deleteMinigameScore(@RequestParam String username) {
+    @GetMapping("/getUserTrackMinigameTimeById")
+    public ResponseEntity<?> getUserTrackMinigameTimeById(@RequestParam String spotifyId) {
         try {
-            boolean deleted = userService.deleteBothMinigameScores(username);
+            Long time = userService.getUserTrackMinigameTimeById(spotifyId);
+            if (time == null) {
+                return new ResponseEntity<>(
+                        Map.of("trackMinigameTime", false),
+                        HttpStatus.OK
+                );
+            }
+            return new ResponseEntity<>(
+                    Map.of("trackMinigameTime", time),
+                    HttpStatus.OK
+            );
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    Map.of("error", "Error: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 
+    @PutMapping("/updateArtistMinigameTimeById")
+    public ResponseEntity<?> updateArtistMinigameTimeById(@RequestParam String spotifyId, @RequestParam long newTime) {
+        try {
+            boolean wasUpdated = userService.updateMinigameTimeById(spotifyId, newTime, "artists");
+            return getResponseMessage(wasUpdated);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    Map.of("error", "Error: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PutMapping("/updateTrackMinigameTimeById")
+    public ResponseEntity<?> updateTrackMinigameTimeById(@RequestParam String spotifyId, @RequestParam long newTime) {
+        try {
+            boolean wasUpdated = userService.updateMinigameTimeById(spotifyId, newTime, "tracks");
+            return getResponseMessage(wasUpdated);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    Map.of("error", "Error: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @DeleteMapping("/deleteBothMinigameScoresById")
+    public ResponseEntity<?> deleteMinigameScoreById(@RequestParam String spotifyId) {
+        try {
+            boolean deleted = userService.deleteBothMinigameScoresById(spotifyId);
             if (deleted) {
                 return new ResponseEntity<>(
-                        Map.of("message", "Minigame score deleted successfully"),
+                        Map.of("message", "Minigame scores deleted successfully"),
                         HttpStatus.OK
                 );
             } else {
@@ -161,11 +150,10 @@ public class UserDatabaseController
         }
     }
 
-    @DeleteMapping("/deleteArtistMinigameScore")
-    public ResponseEntity<?> deleteArtistMinigameScore(@RequestParam String username) {
+    @DeleteMapping("/deleteArtistMinigameScoreById")
+    public ResponseEntity<?> deleteArtistMinigameScoreById(@RequestParam String spotifyId) {
         try {
-            boolean deleted = userService.deleteArtistMinigameScore(username);
-
+            boolean deleted = userService.deleteArtistMinigameScoreById(spotifyId);
             if (deleted) {
                 return new ResponseEntity<>(
                         Map.of("message", "Artist minigame score deleted successfully"),
@@ -185,11 +173,10 @@ public class UserDatabaseController
         }
     }
 
-    @DeleteMapping("/deleteTrackMinigameScore")
-    public ResponseEntity<?> deleteTrackMinigameScore(@RequestParam String username) {
+    @DeleteMapping("/deleteTrackMinigameScoreById")
+    public ResponseEntity<?> deleteTrackMinigameScoreById(@RequestParam String spotifyId) {
         try {
-            boolean deleted = userService.deleteTrackMinigameScore(username);
-
+            boolean deleted = userService.deleteTrackMinigameScoreById(spotifyId);
             if (deleted) {
                 return new ResponseEntity<>(
                         Map.of("message", "Track minigame score deleted successfully"),

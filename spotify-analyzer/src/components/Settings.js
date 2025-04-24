@@ -21,7 +21,6 @@ function Settings() {
 
                     try {
                         const artistScoreResponse = await apiService.getUserArtistMinigameTime(status.profile.display_name);
-                        console.log("Artist score:", artistScoreResponse);
                         if (artistScoreResponse.artistMinigameTime !== false) {
                             setArtistGameHighScore(artistScoreResponse.artistMinigameTime);
                             setArtistGameHighScore(artistScoreResponse.artistMinigameTime);
@@ -34,7 +33,6 @@ function Settings() {
                         const trackScoreResponse = await apiService.getUserTrackMinigameTime(status.profile.display_name);
                         if (trackScoreResponse.trackMinigameTime !== false) {
                             setTrackGameHighScore(trackScoreResponse.trackMinigameTime);
-                            console.log("Track score:", trackScoreResponse);
                         }
                         else {
                             console.log("No track score found");

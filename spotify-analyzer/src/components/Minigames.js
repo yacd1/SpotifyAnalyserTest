@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { fetchTopArtists, searchArtists, fetchTopTracks, searchTracks } from '../services/minigameHandler';
+import {
+    fetchTopArtists,
+    searchArtists,
+    fetchTopTracks,
+    searchTracks
+} from '../services/minigameHandler';
+import { apiService } from '../services/api';
 import { Theme } from '../services/Theme';
-import { apiService } from '../services/api'
+
 import '../styles/App.css';
 
 function Minigames() {
@@ -13,15 +19,50 @@ function Minigames() {
     const [guess, setGuess] = useState("");
     const [suggestion, setSuggestion] = useState(null);
     const [suggestionClicked, setSuggestionClicked] = useState(false);
+
     const [userProfile, setUserProfile] = useState(null);
-    const [response, setResponse] = useState(null);
-    const [currentBestTime, setCurrentBestTime] = useState(null);
+    const [artistBestTime, setArtistBestTime] = useState(null);
+    const [trackBestTime, setTrackBestTime] = useState(null);
+    const [topPlayers, setTopPlayers] = useState([]);
 
     const [startTime, setStartTime] = useState(null);
     const [elapsedTime, setElapsedTime] = useState(0);
     const [timerActive, setTimerActive] = useState(false);
     const [gameComplete, setGameComplete] = useState(false);
     const [scoreMessage, setScoreMessage] = useState("");
+
+    const [showLeaderboard, setShowLeaderboard] = useState(false);
+
+    useEffect(() => {
+        const init = async () => {
+            try {
+                const status = await apiService.checkSpotifyStatus();
+
+                const artistTimeData = await apiService.getUserArtistMinigameTime(status.profile.display_name);
+                if (artistTimeData?.artistMinigameTime !== undefined) {
+                    setArtistBestTime(artistTimeData.artistMinigameTime);
+                } else {
+                    setArtistBestTime(false);
+                }
+
+                const trackTimeData = await apiService.getUserTrackMinigameTime(status.profile.display_name);
+                if (trackTimeData?.trackMinigameTime !== undefined) {
+                    setTrackBestTime(trackTimeData.trackMinigameTime);
+                } else {
+                    setTrackBestTime(false);
+                }
+
+
+                const leaderboard = await apiService.getTopMinigamePlayers();
+                setTopPlayers(leaderboard);
+
+            } catch (err) {
+                console.error("Init error:", err);
+            }
+        };
+
+        init();
+    }, []);
 
     useEffect(() => {
         const fetchUserProfile = async () => {
@@ -45,18 +86,15 @@ function Minigames() {
             setTimerActive(false);
             setGameComplete(false);
             setScoreMessage("");
+            setGuess("");
+            setSuggestion(null);
 
-            switch (mode) {
-                case "artists":
-                    const topArtists = await fetchTopArtists();
-                    setArtists(topArtists.map(artist => ({ name: artist, hidden: true })));
-                    break;
-                case "tracks":
-                    const topTracks = await fetchTopTracks();
-                    setTracks(topTracks.map(track => ({ name: track, hidden: true })));
-                    break;
-                default:
-                    break;
+            if (mode === "artists") {
+                const result = await fetchTopArtists();
+                setArtists(result.map(name => ({ name, hidden: true })));
+            } else {
+                const result = await fetchTopTracks();
+                setTracks(result.map(name => ({ name, hidden: true })));
             }
         };
 
@@ -64,7 +102,7 @@ function Minigames() {
     }, [mode]);
 
     useEffect(() => {
-        if (!timerActive) return;
+        if (!timerActive || !startTime) return;
 
         const interval = setInterval(() => {
             setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
@@ -75,42 +113,44 @@ function Minigames() {
 
     useEffect(() => {
         const items = mode === "artists" ? artists : tracks;
-        const allRevealed = items.length === 10 && items.every(item => !item.hidden);
+        const allGuessed = items.length === 10 && items.every(item => !item.hidden);
 
-        if (allRevealed) {
+        if (allGuessed) {
             setTimerActive(false);
             setGameComplete(true);
-
             localStorage.setItem('gameCompleted', 'true');
-            if (mode === "artists") {
-                saveHighScore("artists");
-            } else {
-                saveHighScore("tracks");
-            }
+            saveHighScore(mode);
         }
     }, [artists, tracks, mode, timerActive]);
 
     const saveHighScore = async (gameType) => {
+        if (!userProfile?.display_name) {
+            setScoreMessage("Login to save your score!");
+            return;
+        }
+
         try {
-
+            let response;
             if (gameType === "artists") {
-                const response = await apiService.updateArtistMinigameTime(userProfile.display_name, elapsedTime)
-            } else {
-                const response = await apiService.updateTrackMinigameTime(userProfile.display_name, elapsedTime)
-            }
-
-            // Handle the response
-            if (response.updated) {
-                setScoreMessage(`New high score: ${elapsedTime}s!`);
-            } else {
-
-                if (gameType === "artists") {
-                   const currentBestTime = await apiService.getArtistMinigameTime(userProfile.display_name);
+                response = await apiService.updateArtistMinigameTime(userProfile.display_name, elapsedTime);
+                if (response.updated) {
+                    setScoreMessage(`New high score: ${elapsedTime}s!`);
+                    setArtistBestTime(elapsedTime);
+                } else {
+                    const time = await apiService.getUserArtistMinigameTime(userProfile.display_name);
+                    setArtistBestTime(time?.artistMinigameTime ?? false);
+                    setScoreMessage(`Your best artist score: ${time}s`);
                 }
-                if (gameType === "tracks") {
-                    const currentBestTime = await apiService.getTrackMinigameTime(userProfile.display_name);
+            } else {
+                response = await apiService.updateTrackMinigameTime(userProfile.display_name, elapsedTime);
+                if (response.updated) {
+                    setScoreMessage(`New high score: ${elapsedTime}s!`);
+                    setTrackBestTime(elapsedTime);
+                } else {
+                    const time = await apiService.getUserTrackMinigameTime(userProfile.display_name);
+                    setTrackBestTime(time?.trackMinigameTime ?? false);
+                    setScoreMessage(`Your best track score: ${time}s`);
                 }
-                setScoreMessage(`Your best score is still: ${currentBestTime}s`);
             }
         } catch (error) {
             console.error("Error saving high score:", error);
@@ -119,72 +159,64 @@ function Minigames() {
     };
 
     const handleGuess = () => {
+        if (!guess.trim()) return;
+
         if (!timerActive && !startTime) {
             setStartTime(Date.now());
             setTimerActive(true);
         }
 
-        switch(mode) {
-            case "artists":
-                setArtists(prev =>
-                    prev.map(item =>
-                        item.name.toLowerCase() === guess.toLowerCase()
-                            ? { ...item, hidden: false }
-                            : item
-                    )
-                );
-                break;
-            case "tracks":
-                setTracks(prev =>
-                    prev.map(item =>
-                        item.name.toLowerCase() === guess.toLowerCase()
-                            ? { ...item, hidden: false }
-                            : item
-                    )
-                );
-                break;
-            default:
-                break;
-        }
+        const updateList = (listSetter) => {
+            listSetter(prev =>
+                prev.map(item =>
+                    item.name.toLowerCase() === guess.toLowerCase()
+                        ? { ...item, hidden: false }
+                        : item
+                )
+            );
+        };
+
+        if (mode === "artists") updateList(setArtists);
+        if (mode === "tracks") updateList(setTracks);
 
         setGuess("");
         setSuggestion(null);
     };
 
     const handleKeyDown = (e) => {
-        if (e.key === "Enter") {
-            handleGuess();
-        }
-    };
-
-    const autoComplete = async () => {
-        if (guess.trim() === "" || suggestionClicked) {
-            setSuggestion(null);
-            return;
-        }
-
-        let results;
-        switch(mode) {
-            case "artists":
-                results = await searchArtists(guess.toLowerCase(), "3");
-                setSuggestion(results);
-                break;
-            case "tracks":
-                results = await searchTracks(guess.toLowerCase(), "3");
-                setSuggestion(results);
-                break;
-        }
+        if (e.key === "Enter") handleGuess();
     };
 
     useEffect(() => {
+        let cancelled = false;
+
+        const autoComplete = async () => {
+            if (guess.trim() === "" || suggestionClicked) {
+                setSuggestion(null);
+                return;
+            }
+
+            const results = mode === "artists"
+                ? await searchArtists(guess.toLowerCase(), "3")
+                : await searchTracks(guess.toLowerCase(), "3");
+
+            if (!cancelled) setSuggestion(results);
+        };
+
         autoComplete();
-    }, [guess]);
+
+        return () => {
+            cancelled = true;
+        };
+    }, [guess, mode, suggestionClicked]);
 
     const handleSuggestionClick = (item) => {
         setGuess(item);
         setSuggestionClicked(true);
         setTimeout(() => setSuggestionClicked(false), 100);
     };
+
+    const itemsToDisplay = mode === "artists" ? artists : tracks;
 
     return (
         <div className={`Minigames ${isDarkMode ? 'dark' : 'light'}`}>
@@ -201,19 +233,15 @@ function Minigames() {
             <p>Can you guess your recent top ten {mode === "artists" ? "artists" : "tracks"}?</p>
 
             <div className="timer">
-                {startTime ? (
-                    <p>Time: {elapsedTime}s</p>
-                ) : (
-                    <p>Guess to begin!</p>
-                )}
-                {gameComplete && <p className="completion-message">Congratulations! You've revealed all items!</p>}
+                {startTime ? <p>Time: {elapsedTime}s</p> : <p>Guess to begin!</p>}
+                {gameComplete && <p className="completion-message">You guessed them all!</p>}
             </div>
 
             <ol className="artistList">
                 <div className="leftColumn">
-                    {(mode === "artists" ? artists : tracks).slice(0, 5).map((item, index) => (
-                        <li key={index}>
-                            <span className="number">{index + 1}</span>
+                    {itemsToDisplay.slice(0, 5).map((item, i) => (
+                        <li key={i}>
+                            <span className="number">{i + 1}</span>
                             <button className={`artistPill ${item.hidden ? "hidden" : "shown"}`}>
                                 {item.name}
                             </button>
@@ -222,9 +250,9 @@ function Minigames() {
                 </div>
 
                 <div className="rightColumn">
-                    {(mode === "artists" ? artists : tracks).slice(5, 10).map((item, index) => (
-                        <li key={index + 5}>
-                            <span className="number">{index + 6}</span>
+                    {itemsToDisplay.slice(5, 10).map((item, i) => (
+                        <li key={i + 5}>
+                            <span className="number">{i + 6}</span>
                             <button className={`artistPill ${item.hidden ? "hidden" : "shown"}`}>
                                 {item.name}
                             </button>
@@ -258,6 +286,41 @@ function Minigames() {
                     </ul>
                 )}
             </div>
+
+            <div className="scoreSection">
+                {scoreMessage && <p className="scoreMessage">{scoreMessage}</p>}
+                <button className="leaderboardToggleBtn" onClick={() => setShowLeaderboard(true)}>
+                    Show Leaderboard
+                </button>
+            </div>
+
+            {showLeaderboard && (
+                <div className="leaderboardOverlay" onClick={() => setShowLeaderboard(false)}>
+                    <div className="leaderboardContent" onClick={(e) => e.stopPropagation()}>
+                        <button className="closeLeaderboard" onClick={() => setShowLeaderboard(false)}>✖</button>
+                        <h3>Top Players</h3>
+                        <ol>
+                            {topPlayers.length > 0 ? (
+                                topPlayers.map((player, index) => (
+                                    <li key={index}>
+                                        {player.spotifyUsername}: {player.minigameBestTimeInSeconds}s
+                                    </li>
+                                ))
+                            ) : (
+                                <p>Loading...</p>
+                            )}
+                        </ol>
+
+                        {userProfile && (
+                            <div className="scoreInfo">
+                                <h3>Your Best Times:</h3>
+                                <p><strong>Artists:</strong> {artistBestTime !== false ? `${artistBestTime}s` : "No score yet"}</p>
+                                <p><strong>Tracks:</strong> {trackBestTime !== false ? `${trackBestTime}s` : "No score yet"}</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

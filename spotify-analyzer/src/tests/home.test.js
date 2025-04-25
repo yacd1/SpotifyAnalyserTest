@@ -149,6 +149,15 @@ describe('Home Component', () => {
         expect(artistCards).toHaveLength(4);
     });
 
+    it('displays a blurred panel on first login', async () => {
+        await renderHome();
+
+        await waitFor(() => {
+            const blurredPanel = document.querySelector('.blurred-panel-container .blurred');
+            expect(blurredPanel).toBeTruthy(); // expect inside waitFor!
+        });
+    });
+
     it('displays top 5 songs', async () => {
         await renderHome();
 

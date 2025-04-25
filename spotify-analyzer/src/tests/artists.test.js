@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import Artists from '../components/Artists';
 import { apiService } from '../services/api';
 
-// Mock the apiService
+// mock the apiService
 jest.mock('../services/api', () => ({
     apiService: {
         getTopArtists: jest.fn(),
@@ -15,7 +15,7 @@ jest.mock('../services/api', () => ({
     },
 }));
 
-// Mock the theme context
+// mock the theme context
 jest.mock('../services/Theme', () => {
     const React = require('react');
     return {
@@ -23,12 +23,13 @@ jest.mock('../services/Theme', () => {
     };
 });
 
-const mockTopArtists = [
-    { id: '1', name: 'Artist 1', images: [{ url: 'image1.jpg' }] },
-    { id: '2', name: 'Artist 2', images: [{ url: 'image2.jpg' }] },
-    { id: '3', name: 'Artist 3', images: [{ url: 'image3.jpg' }] },
-    { id: '4', name: 'Artist 4', images: [{ url: 'image4.jpg' }] },
-];
+//dynamically creating the 14 top artists
+const mockTopArtists = Array.from({ length: 14 }, (_, index) => ({
+    id: String(index + 1),
+    name: `Artist ${index + 1}`,
+    images: [{ url: `image${index + 1}.jpg` }],
+}));
+
 
 const mockArtistInfo = {
     name: 'Test Artist',
@@ -65,10 +66,10 @@ describe('Artists Component', () => {
         expect(screen.getByRole('combobox')).toBeInTheDocument(); // FIX: select instead of label
     });
 
-    it('displays 4 top artists', async () => {
+    it('displays 14 top artists', async () => {
         await renderArtists();
         const artistImages = await screen.findAllByRole('img', {name: /artist/i});
-        expect(artistImages.length).toBe(4);
+        expect(artistImages.length).toBe(14);
     });
 
     it('displays a blurred panel', async () => {
@@ -80,7 +81,7 @@ describe('Artists Component', () => {
         await renderArtists();
 
         // waits until the arrists have been loaded
-        await screen.findByText(/Artist 1/i);
+        await screen.findAllByText(/^Artist 1$/i);
 
         const select = screen.getByRole('combobox');
         fireEvent.change(select, {target: {value: 'short_term'}});

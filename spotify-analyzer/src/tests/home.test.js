@@ -26,7 +26,7 @@ apiService.getAllUsers = jest.fn();
 apiService.registerUser = jest.fn();
 
 
-
+//rendering home component inside memory router (faking a router inside the test)
 describe('Home Component', () => {
     const renderHome = async () => {
         render(
@@ -149,7 +149,7 @@ describe('Home Component', () => {
         expect(artistCards).toHaveLength(4);
     });
 
-    it('displays a blurred panel on first login', async () => {
+    it('always displays a blurred panel when the user first logs in', async () => {
         await renderHome();
 
         await waitFor(() => {

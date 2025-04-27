@@ -41,8 +41,8 @@ public class SpotifyService {
         String state = generateRandomString(16);
         String scopeParam = String.join(" ", scopes);
 
-        //System.out.println("Client ID: " + spotifyConfig.getClientId());
-        //System.out.println("Redirect URI: " + spotifyConfig.getRedirectUri());
+        System.out.println("client ID: " + spotifyConfig.getClientId());
+        System.out.println("redirect URI: " + spotifyConfig.getRedirectUri());
 
         // set our redirect to the frontend callback (THIS MUST BE THE SAME AS WHATEVER IS IN SPOTIFY DASHBOARD!!!)
         String redirectUri = "http://localhost:3000/callback";
@@ -55,7 +55,7 @@ public class SpotifyService {
                 state
         );
 
-        //System.out.println("Generated Auth URL: " + authUrl);
+        System.out.println("Generated Auth URL: " + authUrl);
         return authUrl;
     }
 
@@ -71,7 +71,7 @@ public class SpotifyService {
         body.add("code", code);
         body.add("redirect_uri", redirectUri);
 
-        //System.out.println("exchange code request - grant_type: authorization_code, redirect_uri: " + redirectUri);
+        System.out.println("exchange code request - grant_type: authorization_code, redirect_uri: " + redirectUri);
 
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
 
@@ -90,7 +90,7 @@ public class SpotifyService {
             SpotifyAuthResponse authResponse = response.getBody();
             if (authResponse != null) {
                 System.out.println("token exchange successful. Token type: " + authResponse.getTokenType());
-                //System.out.println("expiry: " + authResponse.getExpiresIn() + " seconds");
+                System.out.println("expiry: " + authResponse.getExpiresIn() + " seconds");
             }
 
             return authResponse;
@@ -159,12 +159,12 @@ public class SpotifyService {
                 .encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Basic " + encodedCredentials); // american spelling
+        headers.add("Authorization", "Basic " + encodedCredentials);
         return headers;
     }
 
     /**
-     * create a random string to parse as the state
+     * create a random string of given length to parse as the state
      */
     private String generateRandomString(int length) {
         String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

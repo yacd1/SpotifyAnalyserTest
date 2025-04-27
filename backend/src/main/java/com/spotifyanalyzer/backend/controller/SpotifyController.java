@@ -41,16 +41,6 @@ public class SpotifyController {
         this.userService = userService;
     }
 
-    private void addUserToDatabase(Map<String, Object> profile) throws Exception {
-        if (profile != null) {
-            String username = (String) profile.get("display_name");
-            String spotifyId = (String) profile.get("id");
-
-            if (username != null && spotifyId != null) {
-                userService.registerUser(username, spotifyId);
-            }
-        }
-    }
 
     private String getValidAccessToken(HttpSession session) {
         String accessToken = (String) session.getAttribute("spotify_access_token");
@@ -62,14 +52,14 @@ public class SpotifyController {
         // check if token is expired
         Long expiryTime = (Long) session.getAttribute("spotify_token_expiry");
         if (expiryTime != null && System.currentTimeMillis() > expiryTime) {
-            // if the tooken is expired, attempt to refresh
+            // if the token is expired, attempt to refresh
             String refreshToken = (String) session.getAttribute("spotify_refresh_token");
             if (refreshToken != null) {
                 try {
                     SpotifyAuthResponse refreshResponse = spotifyService.refreshAccessToken(refreshToken);
                     session.setAttribute("spotify_access_token", refreshResponse.getAccessToken());
 
-                    long newExpiryTime = System.currentTimeMillis() + (refreshResponse.getExpiresIn() * 1000);
+                    long newExpiryTime = System.currentTimeMillis() + (refreshResponse.getExpiresIn() * 1000L);
                     session.setAttribute("spotify_token_expiry", newExpiryTime);
 
                     accessToken = refreshResponse.getAccessToken();
@@ -100,12 +90,12 @@ public class SpotifyController {
 
             System.out.println("Token exchange successful!");
 
-            // store the retrieved token in our sesesion
+            // store the retrieved token in our session
             session.setAttribute("spotify_access_token", authResponse.getAccessToken());
             session.setAttribute("spotify_refresh_token", authResponse.getRefreshToken());
 
             // find our token expiry time
-            long expiryTime = System.currentTimeMillis() + (authResponse.getExpiresIn() * 1000);
+            long expiryTime = System.currentTimeMillis() + (authResponse.getExpiresIn() * 1000L);
             session.setAttribute("spotify_token_expiry", expiryTime);
 
             //System.out.println("Session ID: " + session.getId());
@@ -134,7 +124,6 @@ public class SpotifyController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             System.err.println("token exchange error: " + e.getMessage());
-            e.printStackTrace();
 
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -146,8 +135,8 @@ public class SpotifyController {
     @GetMapping("/status")
     public ResponseEntity<Map<String, Object>> checkAuthStatus(HttpSession session) {
         String accessToken = (String) session.getAttribute("spotify_access_token");
-        //System.out.println("Checking auth status. Session ID: " + session.getId());
-        //System.out.println("Access token present: " + (accessToken != null));
+        System.out.println("Checking auth status. Session ID: " + session.getId());
+        System.out.println("Access token present: " + (accessToken != null));
 
         if (accessToken != null) {
             try {
@@ -252,12 +241,12 @@ public class SpotifyController {
                 return ResponseEntity.badRequest().body(Map.of("error", "No recently played tracks found"));
             }
 
-            Map<String, Object> track = (Map<String, Object>) items.get(0).get("track");
+            Map<String, Object> track = (Map<String, Object>) items.getFirst().get("track");
             String trackName = (String) track.get("name");
-            Map<String, Object> artist = ((List<Map<String, Object>>) track.get("artists")).get(0);
+            Map<String, Object> artist = ((List<Map<String, Object>>) track.get("artists")).getFirst();
             String artistName = (String) artist.get("name");
 
-            // where i search using track name + artist
+            // search using track name + artist
             String query = URLEncoder.encode(trackName + " " + artistName, StandardCharsets.UTF_8);
             String endpoint = "/search?q=" + query + "&type=track&limit=10";
 
@@ -285,7 +274,7 @@ public class SpotifyController {
             return ResponseEntity.ok(filtered);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error in generating recommendations: " +e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to generate recommendations", "details", e.getMessage()));
         }
@@ -331,7 +320,7 @@ public class SpotifyController {
 
             return ResponseEntity.ok(Map.of("topGenre", topGenre));
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error fetching top genre: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to fetch top genre", "details", e.getMessage()));
         }
@@ -351,7 +340,7 @@ public class SpotifyController {
         }
 
         try {
-            // call Spotify API for recently played - I can change limit to change the numebr displayed
+            // call Spotify API for recently played - I can change limit to change the number displayed
             Object recentlyPlayed = spotifyService.makeSpotifyRequest(
                     "/me/player/recently-played?limit=" + limit,
                     HttpMethod.GET,

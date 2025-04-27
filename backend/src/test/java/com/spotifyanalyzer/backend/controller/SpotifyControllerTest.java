@@ -1,6 +1,5 @@
 package com.spotifyanalyzer.backend.controller;
 
-import com.spotifyanalyzer.backend.authservice.ArtistDetails;
 import com.spotifyanalyzer.backend.authservice.PythonService;
 import com.spotifyanalyzer.backend.authservice.SpotifyService;
 import com.spotifyanalyzer.backend.dto.SpotifyAuthResponse;
@@ -16,7 +15,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import jakarta.servlet.http.HttpSession;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class SpotifyControllerTest {
@@ -44,7 +42,7 @@ class SpotifyControllerTest {
     }
 
     @Test
-    void checkAuthStatus() throws Exception {
+    void checkAuthStatus() {
         Map<String, Object> profileInfo = Map.of(
                 "id", "user123",
                 "display_name", "Test User"
@@ -60,7 +58,7 @@ class SpotifyControllerTest {
     }
 
     @Test
-    void getTopArtists() throws Exception {
+    void getTopArtists() {
         Map<String, Object> mockResponse = new HashMap<>();
         List<Map<String, Object>> items = List.of(
                 Map.of("id", "artist1", "name", "artist one"),
@@ -77,7 +75,7 @@ class SpotifyControllerTest {
     }
 
     @Test
-    void getTopTracks() throws Exception {
+    void getTopTracks() {
         Map<String, Object> mockResponse = new HashMap<>();
         List<Map<String, Object>> items = List.of(
                 Map.of("id", "track1", "name", "track one"),
@@ -94,7 +92,7 @@ class SpotifyControllerTest {
     }
 
     @Test
-    void getRecentlyPlayed() throws Exception {
+    void getRecentlyPlayed() {
         Map<String, Object> mockResponse = new HashMap<>();
         List<Map<String, Object>> items = new ArrayList<>();
         Map<String, Object> item = new HashMap<>();
@@ -113,7 +111,7 @@ class SpotifyControllerTest {
     }
 
     @Test
-    void getTopGenre() throws Exception {
+    void getTopGenre() {
         Map<String, Object> topArtistsResponse = new HashMap<>();
         List<Map<String, Object>> items = new ArrayList<>();
 
@@ -139,7 +137,7 @@ class SpotifyControllerTest {
     }
 
     @Test
-    void getFakeRecommendations() throws Exception {
+    void getFakeRecommendations() {
         // mock some recently played track for this test
         Map<String, Object> recentlyPlayedResponse = new HashMap<>();
         List<Map<String, Object>> recentItems = new ArrayList<>();
@@ -179,7 +177,7 @@ class SpotifyControllerTest {
     }
 
     @Test
-    void getSearch() throws Exception {
+    void getSearch() {
         Map<String, Object> searchResponse = new HashMap<>();
         Map<String, Object> tracks = new HashMap<>();
         tracks.put("items", List.of(
@@ -197,7 +195,7 @@ class SpotifyControllerTest {
     }
 
     @Test
-    void getArtistInfo() throws Exception {
+    void getArtistInfo() {
         String artistId = "artist";
         Map<String, Object> artistResponse = Map.of(
                 "id", artistId,

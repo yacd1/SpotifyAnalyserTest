@@ -25,8 +25,7 @@ public class UserDatabaseController
 
     //Registers the users
     @PutMapping("/register")
-    public ResponseEntity<?> register(@RequestParam String username, @RequestParam String spotifyId) throws Exception
-    {
+    public ResponseEntity<?> register(@RequestParam String username, @RequestParam String spotifyId) {
         if(username!=null && spotifyId!=null)
         {
             userService.registerUser(username, spotifyId);

@@ -90,7 +90,7 @@ class UserServiceImplementationTest {
     }
 
     @Test
-    void testUpdateMinigameTimeById_ArtistsGame_BetterTime() throws Exception {
+    void testUpdateMinigameTimeById_ArtistsGame_BetterTime() {
         String spotifyId = "spotify123";
         User user = new User();
         user.setArtistsMinigameBestTimeInSeconds(100L);
@@ -105,7 +105,7 @@ class UserServiceImplementationTest {
     }
 
     @Test
-    void testUpdateMinigameTimeById_TracksGame_FirstTime() throws Exception {
+    void testUpdateMinigameTimeById_TracksGame_FirstTime() {
         String spotifyId = "spotify123";
         User user = new User();
 
@@ -119,7 +119,7 @@ class UserServiceImplementationTest {
     }
 
     @Test
-    void testDeleteBothMinigameScoresById_Success() throws Exception {
+    void testDeleteBothMinigameScoresById_Success() {
         String spotifyId = "spotify123";
         User user = new User();
         user.setArtistsMinigameBestTimeInSeconds(100L);
@@ -136,7 +136,7 @@ class UserServiceImplementationTest {
     }
 
     @Test
-    void testGetUserArtistMinigameTimeById_Success() throws Exception {
+    void testGetUserArtistMinigameTimeById_Success() {
         String spotifyId = "spotify123";
         User user = new User();
         user.setArtistsMinigameBestTimeInSeconds(100L);
@@ -149,7 +149,7 @@ class UserServiceImplementationTest {
     }
 
     @Test
-    void testDeleteArtistMinigameScoreById_Success() throws Exception {
+    void testDeleteArtistMinigameScoreById_Success() {
         String spotifyId = "spotify123";
         User user = new User();
         user.setArtistsMinigameBestTimeInSeconds(100L);

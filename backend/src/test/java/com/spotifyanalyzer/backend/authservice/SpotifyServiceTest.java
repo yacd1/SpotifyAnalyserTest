@@ -17,9 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 public class SpotifyServiceTest {
@@ -34,7 +32,7 @@ public class SpotifyServiceTest {
 
     @BeforeEach
     void setUp() {
-        // can get away with just passing objectMapper to the constrctor and then not mocking it
+        // can get away with just passing objectMapper to the constructor and then not mocking it
         spotifyService = new SpotifyService(spotifyConfig, restTemplate, null);
 
         // prevents the "unnecessary stubbing" errors when running mvn test
@@ -122,7 +120,7 @@ public class SpotifyServiceTest {
                 eq(SpotifyAuthResponse.class)
         )).thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST));
 
-        // we don't use try/catch in the real impementation so we can just propogate here
+        // we don't use try/catch in the real implementation so we can just propagate here
         Exception exception = assertThrows(
                 HttpClientErrorException.class,
                 () -> spotifyService.refreshAccessToken(refreshToken)

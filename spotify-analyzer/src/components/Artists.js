@@ -23,6 +23,7 @@ function Artists() {
     const [searchError, setSearchError] = useState('');
     const navigate = useNavigate();
 
+    // Check if the access token is available and if not, redirect to login
     useEffect(() => {
         if (!accessToken) {
             navigate('/login');
@@ -86,7 +87,7 @@ function Artists() {
         }
     };
 
-
+    // getTopArtists from Spotify API
     const fetchTopArtists = async () => {
         try {
             setLoading(true);

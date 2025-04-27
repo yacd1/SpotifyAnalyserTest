@@ -39,9 +39,7 @@ public class PythonService {
                     response.append(inputLine);
                 }
 
-                // print result
                 System.out.println(response.toString());
-
                 return response.toString();
             }
         } else {

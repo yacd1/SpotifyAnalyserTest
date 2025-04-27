@@ -13,7 +13,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class SpotifyService {
@@ -47,16 +46,14 @@ public class SpotifyService {
         // set our redirect to the frontend callback (THIS MUST BE THE SAME AS WHATEVER IS IN SPOTIFY DASHBOARD!!!)
         String redirectUri = "http://localhost:3000/callback";
 
-        String authUrl = String.format(
+        //System.out.println("Generated Auth URL: " + authUrl);
+        return String.format(
                 "https://accounts.spotify.com/authorize?response_type=code&client_id=%s&scope=%s&redirect_uri=%s&state=%s",
                 spotifyConfig.getClientId(),
                 scopeParam,
                 redirectUri,
                 state
         );
-
-        //System.out.println("Generated Auth URL: " + authUrl);
-        return authUrl;
     }
 
     public SpotifyAuthResponse exchangeCodeForToken(String code) {
@@ -101,7 +98,7 @@ public class SpotifyService {
     }
 
     /**
-     * refresh the expired access token using the refresh token (see https://developer.spotify.com/documentation/web-api/tutorials/refreshing-tokens)
+     * refresh the expired access token using the refresh token (see <a href="https://developer.spotify.com/documentation/web-api/tutorials/refreshing-tokens">...</a>)
      */
     public SpotifyAuthResponse refreshAccessToken(String refreshToken) {
         HttpHeaders headers = createBasicAuthHeaders();
@@ -180,7 +177,7 @@ public class SpotifyService {
     }
 
     /**
-     * makes a general request to the api given a specific endpoint e.g artist, playlist etc
+     * makes a general request to the api given a specific endpoint e.g. artist, playlist etc
      */
     public <T> T makeSpotifyRequest(String endpoint, HttpMethod method, String accessToken,
                                     Object requestBody, Class<T> responseType) {

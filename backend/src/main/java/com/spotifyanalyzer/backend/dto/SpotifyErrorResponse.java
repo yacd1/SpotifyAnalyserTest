@@ -1,8 +1,5 @@
 package com.spotifyanalyzer.backend.dto;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class SpotifyErrorResponse {
     private Error error;
 

@@ -30,7 +30,7 @@ class UserDatabaseControllerTest {
     }
 
     @Test
-    void testRegister_Success() throws Exception {
+    void testRegister_Success() {
         String username = "testUser";
         String spotifyId = "spotify123";
 
@@ -88,7 +88,7 @@ class UserDatabaseControllerTest {
     }
 
     @Test
-    void testGetUserArtistMinigameTimeById_Success() throws Exception {
+    void testGetUserArtistMinigameTimeById_Success() {
         String spotifyId = "spotify123";
         Long expectedTime = 1000L;
         when(userService.getUserArtistMinigameTimeById(spotifyId)).thenReturn(expectedTime);
@@ -100,7 +100,7 @@ class UserDatabaseControllerTest {
     }
 
     @Test
-    void testGetUserArtistMinigameTimeById_NotFound() throws Exception {
+    void testGetUserArtistMinigameTimeById_NotFound() {
         String spotifyId = "spotify123";
         when(userService.getUserArtistMinigameTimeById(spotifyId)).thenReturn(null);
 
@@ -111,7 +111,7 @@ class UserDatabaseControllerTest {
     }
 
     @Test
-    void testUpdateArtistMinigameTimeById_Success() throws Exception {
+    void testUpdateArtistMinigameTimeById_Success() {
         String spotifyId = "spotify123";
         long newTime = 1000L;
         when(userService.updateMinigameTimeById(spotifyId, newTime, "artists")).thenReturn(true);
@@ -123,7 +123,7 @@ class UserDatabaseControllerTest {
     }
 
     @Test
-    void testDeleteBothMinigameScoresById_Success() throws Exception {
+    void testDeleteBothMinigameScoresById_Success() {
         String spotifyId = "spotify123";
         when(userService.deleteBothMinigameScoresById(spotifyId)).thenReturn(true);
 
@@ -134,7 +134,7 @@ class UserDatabaseControllerTest {
     }
 
     @Test
-    void testDeleteArtistMinigameScoreById_Success() throws Exception {
+    void testDeleteArtistMinigameScoreById_Success() {
         String spotifyId = "spotify123";
         when(userService.deleteArtistMinigameScoreById(spotifyId)).thenReturn(true);
 
@@ -145,7 +145,7 @@ class UserDatabaseControllerTest {
     }
 
     @Test
-    void testDeleteTrackMinigameScoreById_Success() throws Exception {
+    void testDeleteTrackMinigameScoreById_Success() {
         String spotifyId = "spotify123";
         when(userService.deleteTrackMinigameScoreById(spotifyId)).thenReturn(true);
 

@@ -1,7 +1,5 @@
 package com.spotifyanalyzer.backend.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class SpotifyCallbackRequest {
     private String code;
 

@@ -12,6 +12,30 @@ public class PythonService {
 
     public String sendPOST(String jsonInputString, String url) throws IOException {
         System.out.println("Sending POST request to Python service with URL: " + url);
+        HttpURLConnection con = getHttpURLConnection(jsonInputString, url);
+
+        int responseCode = con.getResponseCode();
+        System.out.println("POST Response Code :: " + responseCode);
+
+        if (responseCode == HttpURLConnection.HTTP_OK) { // success
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+
+                System.out.println(response);
+                return response.toString();
+            }
+        } else {
+            System.out.println("POST request did not work.");
+            return null;
+        }
+    }
+
+    private static HttpURLConnection getHttpURLConnection(String jsonInputString, String url) throws IOException {
         URL obj = new URL(url);
 
 
@@ -26,25 +50,6 @@ public class PythonService {
             wr.writeBytes(jsonInputString);
             wr.flush();
         }
-
-        int responseCode = con.getResponseCode();
-        System.out.println("POST Response Code :: " + responseCode);
-
-        if (responseCode == HttpURLConnection.HTTP_OK) { // success
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
-                String inputLine;
-                StringBuilder response = new StringBuilder();
-
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-
-                System.out.println(response.toString());
-                return response.toString();
-            }
-        } else {
-            System.out.println("POST request did not work.");
-            return null;
-        }
+        return con;
     }
 }

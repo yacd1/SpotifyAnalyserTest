@@ -57,7 +57,7 @@ public class UserServiceImplementation implements UserService
     }
 
     @Override
-    public boolean updateMinigameTimeById(String spotifyId, long newTime, String typeOfGame) throws Exception {
+    public boolean updateMinigameTimeById(String spotifyId, long newTime, String typeOfGame) {
         User user = getUserFromSpotifyId(spotifyId);
         if (user == null) return false;
 
@@ -78,7 +78,7 @@ public class UserServiceImplementation implements UserService
     }
 
     @Override
-    public boolean deleteBothMinigameScoresById(String spotifyId) throws Exception {
+    public boolean deleteBothMinigameScoresById(String spotifyId) {
         User user = getUserFromSpotifyId(spotifyId);
         if (user == null) return false;
         user.setArtistsMinigameBestTimeInSeconds(null);
@@ -88,21 +88,21 @@ public class UserServiceImplementation implements UserService
     }
 
     @Override
-    public Long getUserArtistMinigameTimeById(String spotifyId) throws Exception {
+    public Long getUserArtistMinigameTimeById(String spotifyId) {
         User user = getUserFromSpotifyId(spotifyId);
         if (user == null) return null;
         return user.getArtistsMinigameBestTimeInSeconds();
     }
 
     @Override
-    public Long getUserTrackMinigameTimeById(String spotifyId) throws Exception {
+    public Long getUserTrackMinigameTimeById(String spotifyId) {
         User user = getUserFromSpotifyId(spotifyId);
         if (user == null) return null;
         return user.getTracksMinigameBestTimeInSeconds();
     }
 
     @Override
-    public boolean deleteArtistMinigameScoreById(String spotifyId) throws Exception {
+    public boolean deleteArtistMinigameScoreById(String spotifyId) {
         User user = getUserFromSpotifyId(spotifyId);
         if (user == null) return false;
         user.setArtistsMinigameBestTimeInSeconds(null);
@@ -111,7 +111,7 @@ public class UserServiceImplementation implements UserService
     }
 
     @Override
-    public boolean deleteTrackMinigameScoreById(String spotifyId) throws Exception {
+    public boolean deleteTrackMinigameScoreById(String spotifyId) {
         User user = getUserFromSpotifyId(spotifyId);
         if (user == null) return false;
         user.setTracksMinigameBestTimeInSeconds(null);

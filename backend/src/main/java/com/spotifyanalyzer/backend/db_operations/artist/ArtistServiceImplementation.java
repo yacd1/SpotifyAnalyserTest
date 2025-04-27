@@ -9,11 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.List;
 
 @Service
 public class ArtistServiceImplementation implements ArtistService
@@ -38,8 +36,8 @@ public class ArtistServiceImplementation implements ArtistService
         else {
             // if more than 30 days have passed since the last update, update the summary
             Date currentDate = new Date();
-            long diffInMillies = currentDate.getTime() - artist.getUpdate_date().getTime();
-            long diffInDays = diffInMillies / (1000 * 60 * 60 * 24);
+            long diffInMilliseconds = currentDate.getTime() - artist.getUpdate_date().getTime();
+            long diffInDays = diffInMilliseconds / (1000 * 60 * 60 * 24);
             if (diffInDays > 30)
             {
                 updateSummaryAndDate(artistName, artist, currentDate);

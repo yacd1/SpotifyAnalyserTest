@@ -19,7 +19,7 @@ public class UserServiceImplementation implements UserService
         // (ben) check if the user already exists by spotifyId (more reliable than username)
         User existingUser = userRepository.findBySpotifyId(spotifyId);
         if (existingUser != null) {
-            // User already exists, update username if it changed
+            // user already exists, update username if it changed
             if (!existingUser.getSpotifyUsername().equals(username)) {
                 existingUser.setSpotifyUsername(username);
                 userRepository.save(existingUser);

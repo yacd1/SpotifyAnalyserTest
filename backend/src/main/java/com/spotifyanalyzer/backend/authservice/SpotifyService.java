@@ -46,13 +46,16 @@ public class SpotifyService {
         // set our redirect to the frontend callback (THIS MUST BE THE SAME AS WHATEVER IS IN SPOTIFY DASHBOARD!!!)
         String redirectUri = "http://localhost:3000/callback";
 
-        return String.format(
+        String authUrl= String.format(
                 "https://accounts.spotify.com/authorize?response_type=code&client_id=%s&scope=%s&redirect_uri=%s&state=%s",
                 spotifyConfig.getClientId(),
                 scopeParam,
                 redirectUri,
                 state
         );
+
+        System.out.println("Generated Auth URL: " + authUrl);
+        return authUrl;
     }
 
     public SpotifyAuthResponse exchangeCodeForToken(String code) {

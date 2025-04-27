@@ -169,15 +169,13 @@ const Home = () => {
         fetchTopGenre();
         fetchTopSongs();
         addUserToDatabase();
-    }, [accessToken, navigate]);
 
-// this useEffect will run after userProfile is set
-    useEffect(() => {
-        if (userProfile && userProfile.id) {
-            fetchArtistGameHighScore();
-            fetchTrackGameHighScore();
-        }
-    }, [userProfile]);
+
+        // need to fetch user profile before fetching high scores
+        fetchUserProfile();
+        fetchArtistGameHighScore();
+        fetchTrackGameHighScore();
+    }, [accessToken, navigate]);
 
 // whenever the time period changes we need to refresh
     useEffect(() => {

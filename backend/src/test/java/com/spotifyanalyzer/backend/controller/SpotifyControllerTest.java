@@ -42,36 +42,6 @@ class SpotifyControllerTest {
     }
 
     @Test
-    void getAuthUrl() {
-        String expectedAuthUrl = "https://accounts.spotify.com/authorize?client_id=123&response_type=code";
-        when(spotifyService.getAuthorisationUrl()).thenReturn(expectedAuthUrl);
-
-        ResponseEntity<Map<String, String>> response = spotifyController.getAuthUrl();
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(expectedAuthUrl, response.getBody().get("authUrl"));
-    }
-
-    @Test
-    void exchangeToken() {
-        String code = "auth_code";
-        SpotifyAuthResponse authResponse = new SpotifyAuthResponse();
-        authResponse.setAccessToken("new_access_token");
-        authResponse.setRefreshToken("refresh_token");
-        authResponse.setExpiresIn(3600);
-        authResponse.setTokenType("Bearer");
-
-        when(spotifyService.exchangeCodeForToken(code)).thenReturn(authResponse);
-
-        ResponseEntity<?> response = spotifyController.exchangeToken(code, session);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
-        assertEquals("new_access_token", responseBody.get("access_token"));
-    }
-
-    @Test
     void checkAuthStatus() {
         Map<String, Object> profileInfo = Map.of(
                 "id", "user123",

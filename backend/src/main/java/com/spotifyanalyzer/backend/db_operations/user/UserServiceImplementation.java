@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Comparator;
 
 @Service
 public class UserServiceImplementation implements UserService
@@ -48,12 +50,16 @@ public class UserServiceImplementation implements UserService
     @Override
     public List<User> getTopMinigamePlayers() throws Exception
     {
-        List<User> users = userRepository.findTop5ByOrderByArtistsMinigameBestTimeInSecondsAsc();
-        if (users != null)
-        {
-            return users;
+        List<User> users = userRepository.findAll().stream()
+                .filter(user -> user.getArtistsMinigameBestTimeInSeconds() != null)
+                .sorted(Comparator.comparing(User::getArtistsMinigameBestTimeInSeconds))
+                .limit(5)
+                .collect(Collectors.toList());
+
+        if (users.isEmpty()) {
+            throw new Exception("No top minigame players found");
         }
-        throw new Exception("No top minigame players found");
+        return users;
     }
 
     @Override

@@ -57,6 +57,7 @@ public class User {
     public Long getTracksMinigameBestTimeInSeconds() {
         return tracksMinigameBestTimeInSeconds;
     }
+
     public void setTracksMinigameBestTimeInSeconds(Long tracksMinigameBestTimeInSeconds) {
         this.tracksMinigameBestTimeInSeconds = tracksMinigameBestTimeInSeconds;
     }

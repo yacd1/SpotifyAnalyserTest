@@ -4,8 +4,19 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
 @Document(collection = "UserCollection")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
+    // (ben) refactored 28/4 to use Lombok
+
     @Id
     private String id;
 
@@ -20,47 +31,4 @@ public class User {
 
     @Field("tracks_minigame_best_time_in_seconds")
     private Long tracksMinigameBestTimeInSeconds;
-
-    // Getters and Setters
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getSpotifyUsername() {
-        return spotifyUsername;
-    }
-
-    public void setSpotifyUsername(String spotifyUsername) {
-        this.spotifyUsername = spotifyUsername;
-    }
-
-    public String getSpotifyId() {
-        return spotifyId;
-    }
-
-    public void setSpotifyId(String spotifyId) {
-        this.spotifyId = spotifyId;
-    }
-
-    public Long getArtistsMinigameBestTimeInSeconds() {
-        return artistsMinigameBestTimeInSeconds;
-    }
-
-    public void setArtistsMinigameBestTimeInSeconds(Long artistsMinigameBestTimeInSeconds) {
-        this.artistsMinigameBestTimeInSeconds = artistsMinigameBestTimeInSeconds;
-    }
-
-    public Long getTracksMinigameBestTimeInSeconds() {
-        return tracksMinigameBestTimeInSeconds;
-    }
-
-    public void setTracksMinigameBestTimeInSeconds(Long tracksMinigameBestTimeInSeconds) {
-        this.tracksMinigameBestTimeInSeconds = tracksMinigameBestTimeInSeconds;
-    }
-
-
 }

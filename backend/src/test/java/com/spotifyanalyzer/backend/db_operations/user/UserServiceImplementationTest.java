@@ -73,7 +73,10 @@ class UserServiceImplementationTest {
 
     @Test
     void testGetTopMinigamePlayers_Success() throws Exception {
-        List<User> mockUsers = List.of(new User());
+        User mockUser = new User();
+        mockUser.setArtistsMinigameBestTimeInSeconds(100L);
+        List<User> mockUsers = List.of(mockUser);
+
         when(userRepository.findTop5ByOrderByArtistsMinigameBestTimeInSecondsAsc()).thenReturn(mockUsers);
 
         List<User> result = userService.getTopMinigamePlayers();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
     fetchTopArtists,
     searchArtists,
@@ -33,6 +33,25 @@ function Minigames() {
 
     const [showLeaderboard, setShowLeaderboard] = useState(false);
 
+    const showLeaderboardHandler = async () => {
+        try {
+            const leaderboard = await apiService.getTopMinigamePlayers();
+            console.log("Full leaderboard response:", JSON.stringify(leaderboard, null, 2));
+
+            if (leaderboard && leaderboard.length > 0) {
+                console.log("First player in leaderboard:", leaderboard[0]);
+                console.log("Available properties:", Object.keys(leaderboard[0]));
+            } else {
+                console.log("Leaderboard is empty or null");
+            }
+
+            setTopPlayers(leaderboard || []);
+        } catch (err) {
+            console.error("Error fetching leaderboard:", err);
+        }
+        setShowLeaderboard(true);
+    };
+
     useEffect(() => {
         const init = async () => {
             try {
@@ -54,7 +73,7 @@ function Minigames() {
                     }
 
                     const leaderboard = await apiService.getTopMinigamePlayers();
-                    setTopPlayers(leaderboard);
+                    setTopPlayers(leaderboard.filter(player => player.artistsMinigameBestTimeInSeconds !== null));
                 }
             } catch (err) {
                 console.error("Init error:", err);
@@ -111,22 +130,7 @@ function Minigames() {
         return () => clearInterval(interval);
     }, [timerActive, startTime]);
 
-    useEffect(() => {
-        const items = mode === "artists" ? artists : tracks;
-        const allGuessed = items.length === 10 && items.every(item => !item.hidden);
-
-        if (allGuessed) {
-            setTimerActive(false);
-            setGameComplete(true);
-            localStorage.setItem('gameCompleted', 'true');
-            
-            if (userProfile && userProfile.id) {
-                saveHighScore(mode);
-            }
-        }
-    }, [artists, tracks, mode, timerActive, userProfile]);
-
-    const saveHighScore = async (gameType) => {
+    const saveHighScore = useCallback(async (gameType) => {
         if (!userProfile || !userProfile.id) {
             setScoreMessage("Login to save your score!");
             return;
@@ -159,7 +163,22 @@ function Minigames() {
             console.error("error saving high score:", error);
             setScoreMessage("Error saving your score. Try again later.");
         }
-    };
+    }, [userProfile, elapsedTime, setScoreMessage, setArtistBestTime, setTrackBestTime]);
+
+    useEffect(() => {
+        const items = mode === "artists" ? artists : tracks;
+        const allGuessed = items.length === 10 && items.every(item => !item.hidden);
+
+        if (allGuessed) {
+            setTimerActive(false);
+            setGameComplete(true);
+            localStorage.setItem('gameCompleted', 'true');
+
+            if (userProfile && userProfile.id) {
+                saveHighScore(mode);
+            }
+        }
+    }, [artists, tracks, mode, timerActive, userProfile, saveHighScore]);
 
     const handleGuess = () => {
         if (!guess.trim()) return;
@@ -292,7 +311,7 @@ function Minigames() {
 
             <div className="scoreSection">
                 {scoreMessage && <p className="scoreMessage">{scoreMessage}</p>}
-                <button className="leaderboardToggleBtn" onClick={() => setShowLeaderboard(true)}>
+                <button className="leaderboardToggleBtn" onClick={showLeaderboardHandler}>
                     Show Leaderboard
                 </button>
             </div>
@@ -306,11 +325,11 @@ function Minigames() {
                             {topPlayers.length > 0 ? (
                                 topPlayers.map((player, index) => (
                                     <li key={index}>
-                                        {player.spotifyUsername}: {player.minigameBestTimeInSeconds}s
+                                        {player.spotifyUsername}: {player.artistsMinigameBestTimeInSeconds}s
                                     </li>
                                 ))
                             ) : (
-                                <p>Loading...</p>
+                                <p>No scores available yet</p>
                             )}
                         </ol>
 

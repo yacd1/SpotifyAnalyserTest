@@ -267,7 +267,7 @@ const Home = () => {
                         )}
                     </div>
                     <div className="my-stats-reccomendation">
-                        <h3>Recommendations Based on Your Recent Listen</h3>
+                        <h3>Recommendations Based on Your Recent Listening</h3>
                         {recommendations && recommendations.length > 0 ? (
                             <ul className="recent-tracks-list">
                                 {recommendations.slice(0, 10).map((track) => (

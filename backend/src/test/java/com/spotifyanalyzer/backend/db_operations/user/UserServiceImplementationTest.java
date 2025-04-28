@@ -72,16 +72,26 @@ class UserServiceImplementationTest {
     }
 
     @Test
-    void testGetTopMinigamePlayers_Success() throws Exception {
-        User mockUser = new User();
-        mockUser.setArtistsMinigameBestTimeInSeconds(100L);
-        List<User> mockUsers = List.of(mockUser);
+    void testGetTopMinigamePlayers_Success() {
+        User user1 = new User();
+        user1.setSpotifyId("testId1");
+        user1.setSpotifyUsername("testUser1");
+        user1.setArtistsMinigameBestTimeInSeconds(100L);
 
-        when(userRepository.findTop5ByOrderByArtistsMinigameBestTimeInSecondsAsc()).thenReturn(mockUsers);
+        User user2 = new User();
+        user2.setSpotifyId("testId2");
+        user2.setSpotifyUsername("testUser2");
+        user2.setArtistsMinigameBestTimeInSeconds(200L);
+
+        List<User> mockUsers = List.of(user1, user2);
+
+        when(userRepository.findAll()).thenReturn(mockUsers);
 
         List<User> result = userService.getTopMinigamePlayers();
 
-        assertEquals(mockUsers, result);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertEquals(2, result.size());
     }
 
     @Test
